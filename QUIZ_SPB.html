@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>Quiz – środki przymusu bezpośredniego, KAS, KK</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 0 10px;
+            line-height: 1.5;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .controls {
+            text-align: center;
+            margin: 15px 0 25px 0;
+        }
+        button {
+            margin: 0 5px;
+            padding: 8px 16px;
+            cursor: pointer;
+        }
+        .question {
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 10px 12px;
+            margin-bottom: 10px;
+        }
+        .question-header {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .answers label {
+            display: block;
+            margin: 2px 0;
+            cursor: pointer;
+        }
+        .correct {
+            border-color: #2e7d32;
+            background: #e8f5e9;
+        }
+        .incorrect {
+            border-color: #c62828;
+            background: #ffebee;
+        }
+        .feedback {
+            margin-top: 6px;
+            font-size: 0.9em;
+        }
+        .feedback-correct {
+            color: #2e7d32;
+        }
+        .feedback-incorrect {
+            color: #c62828;
+        }
+        #result {
+            text-align: center;
+            font-weight: bold;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+<h1>Quiz – środki przymusu, KAS, obrona konieczna</h1>
+
+<div class="controls">
+    <button id="newSetBtn">Losuj nowy zestaw (10 pytań)</button>
+    <button id="checkBtn">Sprawdź odpowiedzi</button>
+</div>
+
+<div id="quiz"></div>
+<div id="result"></div>
+
+<script>
+    const questions = [
+        // ART. 6 – zasada celowości, proporcjonalności, najmniejszej dolegliwości
+        {
+            text: "Zgodnie z art. 6 ustawy o środkach przymusu bezpośredniego i broni palnej środki przymusu stosuje się:",
+            answers: {
+                a: "w sposób niezbędny, proporcjonalny do stopnia zagrożenia, wybierając środek o możliwie najmniejszej dolegliwości",
+                b: "zawsze w maksymalnym natężeniu, aby jak najszybciej zakończyć interwencję",
+                c: "wyłącznie na podstawie decyzji sądu, bez oceny stopnia zagrożenia"
+            },
+            correct: "a"
+        },
+        {
+            text: "Kiedy zgodnie z art. 6 broni palnej można użyć lub ją wykorzystać?",
+            answers: {
+                a: "zawsze, gdy funkcjonariusz ma przy sobie broń",
+                b: "wyłącznie gdy użycie środków przymusu bezpośredniego okazało się niewystarczające lub jest niemożliwe ze względu na okoliczności zdarzenia",
+                c: "zawsze, gdy osoba nie wykonuje pierwszego wydanego polecenia"
+            },
+            correct: "b"
+        },
+        {
+            text: "Które z poniższych najlepiej oddaje zasadę minimalizacji skutków wynikającą z art. 6?",
+            answers: {
+                a: "użycie środka o jak największej sile, aby demonstracyjnie zniechęcić innych",
+                b: "stosowanie środków w sposób jak najmniej dolegliwy, przy zachowaniu skuteczności",
+                c: "rezygnacja z użycia środków przymusu bezpośredniego w każdej wątpliwej sytuacji"
+            },
+            correct: "b"
+        },
+        // ART. 7 – szczególna ostrożność, odstąpienie po osiągnięciu celu
+        {
+            text: "Zgodnie z art. 7 środki przymusu bezpośredniego i broń palna stosuje się:",
+            answers: {
+                a: "w sposób wyrządzający możliwie najmniejszą szkodę",
+                b: "tak, by zawsze doprowadzić do maksymalnego obezwładnienia osoby",
+                c: "bez konieczności uwzględniania szkody, jeśli osoba popełniła przestępstwo"
+            },
+            correct: "a"
+        },
+        {
+            text: "Co nakazuje art. 7 w momencie, gdy cel użycia środka przymusu bezpośredniego został osiągnięty?",
+            answers: {
+                a: "kontynuować użycie środka do czasu przyjazdu przełożonego",
+                b: "odstąpić od dalszego użycia lub wykorzystania środka",
+                c: "czekać na decyzję prokuratora"
+            },
+            correct: "b"
+        },
+        {
+            text: "Które stwierdzenie dotyczące art. 7 jest prawidłowe?",
+            answers: {
+                a: "przy podejmowaniu decyzji o użyciu broni palnej należy traktować ją jako środek ostateczny",
+                b: "broń palną można traktować jak każdy inny środek przymusu",
+                c: "art. 7 nie odnosi się do broni palnej"
+            },
+            correct: "a"
+        },
+        // ART. 8 – możliwość użycia kilku środków
+        {
+            text: "Zgodnie z art. 8 ustawy o środkach przymusu bezpośredniego i broni palnej:",
+            answers: {
+                a: "nie wolno łączyć więcej niż jednego środka przymusu wobec tej samej osoby",
+                b: "dopuszczalne jest użycie lub wykorzystanie jednocześnie więcej niż jednego środka przymusu bezpośredniego, jeśli wymagają tego okoliczności",
+                c: "wolno stosować wyłącznie środki o najsłabszym oddziaływaniu"
+            },
+            correct: "b"
+        },
+        {
+            text: "Co jest podstawową zasadą przy wyborze środka przymusu w rozumieniu art. 6 i 8?",
+            answers: {
+                a: "wybór środka o możliwie najmniejszej dolegliwości przy zachowaniu skuteczności",
+                b: "wybór środka najbardziej dotkliwego, aby zniechęcić do ucieczki",
+                c: "wybór środka z polecenia osoby zatrzymywanej"
+            },
+            correct: "a"
+        },
+        // ART. 9 – kobiety w ciąży, małoletni, osoby z niepełnosprawnością
+        {
+            text: "Wobec kobiet o widocznej ciąży, osób, których wygląd wskazuje na wiek do 13 lat, oraz osób o widocznej niepełnosprawności uprawniony może, co do zasady, użyć:",
+            answers: {
+                a: "dowolnego środka przymusu bezpośredniego",
+                b: "wyłącznie siły fizycznej w postaci technik obezwładnienia",
+                c: "wyłącznie broni palnej ostrzegawczo"
+            },
+            correct: "b"
+        },
+        {
+            text: "Kiedy wobec osób wymienionych w art. 9 ust. 1 można użyć innych środków przymusu lub broni palnej?",
+            answers: {
+                a: "nigdy, niezależnie od sytuacji",
+                b: "gdy wygodniej jest użyć innego środka niż techniki obezwładnienia",
+                c: "gdy zachodzi konieczność odparcia bezpośredniego, bezprawnego zamachu na życie lub zdrowie, a użycie siły fizycznej jest niewystarczające lub niemożliwe"
+            },
+            correct: "c"
+        },
+        {
+            text: "Art. 9 nakazuje przy użyciu środków wobec osób szczególnie chronionych (np. małoletnich poniżej 13 lat) przede wszystkim:",
+            answers: {
+                a: "uwzględniać stan osoby i właściwości środka",
+                b: "kierować się tym, aby czynność trwała jak najkrócej, bez względu na bezpieczeństwo",
+                c: "zawsze używać środków chemicznych"
+            },
+            correct: "a"
+        },
+        // ART. 11 – przesłanki użycia środków przymusu
+        {
+            text: "Środków przymusu bezpośredniego zgodnie z art. 11 można użyć m.in. w celu:",
+            answers: {
+                a: "wyegzekwowania wymaganego prawem zachowania zgodnie z wydanym poleceniem",
+                b: "ukarania osoby za wcześniejsze wykroczenie",
+                c: "zmuszenia do złożenia wyjaśnień bez podstawy prawnej"
+            },
+            correct: "a"
+        },
+        {
+            text: "Która z poniższych sytuacji jest przesłanką z art. 11 do użycia środków przymusu bezpośredniego?",
+            answers: {
+                a: "odparcie bezpośredniego, bezprawnego zamachu na życie, zdrowie lub wolność uprawnionego lub innej osoby",
+                b: "zapewnienie szybszego przeprowadzenia rutynowej kontroli dokumentów",
+                c: "ułatwienie sporządzania dokumentacji służbowej"
+            },
+            correct: "a"
+        },
+        {
+            text: "Art. 11 przewiduje, że środki przymusu mogą być stosowane m.in. w celu:",
+            answers: {
+                a: "pokonania biernego lub czynnego oporu",
+                b: "uzyskania zgody na rozpowszechnianie danych osobowych",
+                c: "zastąpienia decyzji organu podatkowego"
+            },
+            correct: "a"
+        },
+        {
+            text: "Przeciwdziałanie czynnościom zmierzającym do autoagresji jest:",
+            answers: {
+                a: "przesłanką użycia środków przymusu bezpośredniego wskazaną w art. 11",
+                b: "dopuszczalne tylko przy użyciu broni palnej",
+                c: "niedopuszczalne w świetle ustawy o środkach przymusu bezpośredniego"
+            },
+            correct: "a"
+        },
+        // ART. 12 – katalog środków (ogólnie)
+        {
+            text: "Art. 12 ustawy o środkach przymusu bezpośredniego i broni palnej określa:",
+            answers: {
+                a: "zamknięty katalog środków przymusu bezpośredniego",
+                b: "wyłącznie zasady udzielania pierwszej pomocy",
+                c: "wyłącznie zasady dokumentowania użycia środków"
+            },
+            correct: "a"
+        },
+        {
+            text: "Które z poniższych należy do środków przymusu bezpośredniego w rozumieniu art. 12?",
+            answers: {
+                a: "siła fizyczna",
+                b: "kara grzywny",
+                c: "nakaz zapłaty"
+            },
+            correct: "a"
+        },
+        {
+            text: "Do środków przymusu bezpośredniego z art. 12 nie należy:",
+            answers: {
+                a: "siła fizyczna",
+                b: "środki chemiczne obezwładniające",
+                c: "mandat karny"
+            },
+            correct: "c"
+        },
+        // ART. 14 – siła fizyczna
+        {
+            text: "Siły fizycznej można użyć zgodnie z art. 14:",
+            answers: {
+                a: "w przypadkach określonych w art. 11 ustawy o środkach przymusu bezpośredniego i broni palnej",
+                b: "tylko wobec osób skazanych prawomocnym wyrokiem",
+                c: "dowolnie, jeśli interweniuje więcej niż jeden funkcjonariusz"
+            },
+            correct: "a"
+        },
+        {
+            text: "Zgodnie z art. 14 przy użyciu siły fizycznej co do zasady:",
+            answers: {
+                a: "nie zadaje się uderzeń, chyba że uprawniony odpiera zamach lub przeciwdziała ucieczce",
+                b: "zawsze zadaje się jak najwięcej uderzeń, aby szybko obezwładnić osobę",
+                c: "wolno zadawać uderzenia wyłącznie w głowę, aby szybko zakończyć interwencję"
+            },
+            correct: "a"
+        },
+        // ART. 34 – zasada ostrzeżenia
+        {
+            text: "Zgodnie z art. 34 środki przymusu bezpośredniego można co do zasady użyć:",
+            answers: {
+                a: "bez ostrzeżenia, aby interwencja była zaskoczeniem",
+                b: "po uprzednim bezskutecznym wezwaniu osoby do zachowania się zgodnego z prawem i uprzedzeniu o zamiarze użycia środków",
+                c: "dopiero po uzyskaniu zgody sądu"
+            },
+            correct: "b"
+        },
+        {
+            text: "W jakiej sytuacji NIE stosuje się obowiązku uprzedniego wezwania i ostrzeżenia z art. 34 ust. 1?",
+            answers: {
+                a: "gdy uprawniony działa w godzinach nocnych",
+                b: "gdy występuje bezpośrednie zagrożenie życia, zdrowia lub wolności uprawnionego lub innej osoby",
+                c: "gdy osoba jest znana uprawnionemu z wcześniejszych interwencji"
+            },
+            correct: "b"
+        },
+        {
+            text: "Art. 34 ust. 2 pozwala odstąpić od ostrzeżenia także wtedy, gdy:",
+            answers: {
+                a: "zwłoka groziłaby niebezpieczeństwem dla dobra chronionego prawem, a środków przymusu używa się prewencyjnie",
+                b: "osoba odmawia podania adresu zamieszkania",
+                c: "interwencja odbywa się w miejscu publicznym"
+            },
+            correct: "a"
+        },
+        // ART. 35 – decyzja o użyciu środków
+        {
+            text: "Kto zgodnie z art. 35 co do zasady podejmuje decyzję o użyciu lub wykorzystaniu środków przymusu bezpośredniego?",
+            answers: {
+                a: "sąd rejonowy właściwy dla miejsca zdarzenia",
+                b: "uprawniony funkcjonariusz, który używa środka",
+                c: "wojewoda właściwy dla miejsca służby"
+            },
+            correct: "b"
+        },
+        {
+            text: "Art. 35 wskazuje, że szczególne zasady podejmowania decyzji o użyciu środków przymusu dotyczą m.in.:",
+            answers: {
+                a: "funkcjonariuszy Służby Więziennej oraz pracowników zakładów poprawczych i schronisk dla nieletnich",
+                b: "wyłącznie pracowników urzędów skarbowych",
+                c: "wyłącznie funkcjonariuszy Straży Miejskiej"
+            },
+            correct: "a"
+        },
+        // ART. 36 – pierwsza pomoc
+        {
+            text: "Co musi zrobić uprawniony zgodnie z art. 36, gdy w wyniku użycia środka przymusu nastąpiło zranienie osoby lub inne widoczne objawy zagrożenia życia lub zdrowia?",
+            answers: {
+                a: "odstąpić od interwencji i udać się do jednostki organizacyjnej",
+                b: "niezwłocznie udzielić pierwszej pomocy, a w razie potrzeby zapewnić wezwanie kwalifikowanej pierwszej pomocy lub podmiotów medycznych",
+                c: "poczekać na przyjazd karetki bez podejmowania żadnych działań"
+            },
+            correct: "b"
+        },
+        {
+            text: "Kiedy uprawniony może odstąpić od udzielania pierwszej pomocy zgodnie z art. 36 ust. 2?",
+            answers: {
+                a: "gdy udzielenie pomocy mogłoby zagrozić życiu, zdrowiu lub bezpieczeństwu uprawnionego lub innej osoby, albo uniemożliwiłoby wykonywanie ważnych czynności ochronnych, lub gdy pomoc zapewniają inne podmioty",
+                b: "zawsze, gdy osoba wygląda na niebezpieczną",
+                c: "gdy osoba nie posiada dokumentu tożsamości"
+            },
+            correct: "a"
+        },
+        {
+            text: "Art. 36 ust. 4 stanowi, że uprawniony nie może odstąpić od zapewnienia medycznych czynności ratunkowych:",
+            answers: {
+                a: "wobec każdej osoby zatrzymanej",
+                b: "wobec kobiety ciężarnej, wobec której użyto środków przymusu bezpośredniego",
+                c: "wobec osoby, która odmówiła podania danych osobowych"
+            },
+            correct: "b"
+        },
+        // ART. 51 – dokumentowanie
+        {
+            text: "Co zgodnie z art. 51 ustawy o środkach przymusu bezpośredniego i broni palnej uprawniony dokumentuje w notatce?",
+            answers: {
+                a: "wyłącznie użycie broni palnej",
+                b: "wyłącznie użycie siły fizycznej",
+                c: "użycie i wykorzystanie środków przymusu bezpośredniego oraz broni palnej"
+            },
+            correct: "c"
+        },
+        {
+            text: "W jakiej sytuacji uprawniony zawsze przekazuje przełożonemu notatkę dotyczącą użycia środków przymusu bezpośredniego?",
+            answers: {
+                a: "gdy użyto środka wobec nieletniego umieszczonego w zakładzie poprawczym, schronisku dla nieletnich, okręgowym ośrodku wychowawczym, młodzieżowym ośrodku wychowawczym lub policyjnej izbie dziecka",
+                b: "zawsze po każdej rozmowie pouczającej",
+                c: "tylko gdy osoba okazała dowód osobisty"
+            },
+            correct: "a"
+        },
+        {
+            text: "Zgodnie z art. 51 ust. 2 notatkę przekazuje się przełożonemu m.in. gdy:",
+            answers: {
+                a: "użycie środka przymusu bezpośredniego spowodowało zranienie osoby, śmierć osoby lub zwierzęcia albo zniszczenie mienia",
+                b: "interwencja miała miejsce w dniu wolnym od pracy",
+                c: "osoba nagrywała przebieg interwencji"
+            },
+            correct: "a"
+        },
+        // KK – ART. 25 obrona konieczna
+        {
+            text: "Zgodnie z art. 25 § 1 Kodeksu karnego nie popełnia przestępstwa ten, kto:",
+            answers: {
+                a: "w obronie koniecznej odpiera bezpośredni, bezprawny zamach na jakiekolwiek dobro chronione prawem",
+                b: "odpiera każdy atak, także zgodny z prawem",
+                c: "korzysta z obrony koniecznej wyłącznie w obronie własnego mienia"
+            },
+            correct: "a"
+        },
+        {
+            text: "Który z poniższych warunków jest elementem obrony koniecznej z art. 25 KK?",
+            answers: {
+                a: "zamach musi być bezpośredni i bezprawny",
+                b: "zamach może być odległy w czasie",
+                c: "zamach musi wynikać z wyroku sądu"
+            },
+            correct: "a"
+        },
+        {
+            text: "Przekroczenie granic obrony koniecznej co do zasady:",
+            answers: {
+                a: "zawsze wyłącza odpowiedzialność karną",
+                b: "może prowadzić do odpowiedzialności, chyba że zachodzą szczególne okoliczności przewidziane w art. 25 (np. działanie pod wpływem strachu lub wzburzenia)",
+                c: "jest dozwolone, jeśli sprawca działa publicznie"
+            },
+            correct: "b"
+        },
+        // KK – ART. 26 stan wyższej konieczności
+        {
+            text: "Zgodnie z art. 26 § 1 KK nie popełnia przestępstwa ten, kto działa w celu uchylenia bezpośredniego niebezpieczeństwa, jeżeli:",
+            answers: {
+                a: "niebezpieczeństwo można łatwo uniknąć w inny sposób",
+                b: "dobro poświęcone przedstawia wartość oczywiście wyższą niż dobro ratowane",
+                c: "niebezpieczeństwa nie można inaczej uniknąć, a dobro poświęcone nie przedstawia wartości oczywiście wyższej niż dobro ratowane"
+            },
+            correct: "c"
+        },
+        {
+            text: "Które stwierdzenie oddaje istotę stanu wyższej konieczności z art. 26 KK?",
+            answers: {
+                a: "poświęca się dobro o mniejszej wartości, aby ratować dobro o wartości większej lub co najmniej równorzędnej",
+                b: "poświęca się dowolne dobro, nawet znacznie cenniejsze niż ratowane",
+                c: "poświęca się wyłącznie dobro własne, nigdy cudze"
+            },
+            correct: "a"
+        },
+        {
+            text: "Stan wyższej konieczności może dotyczyć:",
+            answers: {
+                a: "wyłącznie dóbr majątkowych",
+                b: "dowolnych dóbr chronionych prawem, jeśli spełnione są przesłanki z art. 26",
+                c: "wyłącznie zdrowia fizycznego"
+            },
+            correct: "b"
+        },
+        // USTAWA O KAS – ART. 138–140
+        {
+            text: "Art. 138 ustawy o Krajowej Administracji Skarbowej stanowi, że prawo do otrzymania uzbrojenia i środków przymusu bezpośredniego przysługuje:",
+            answers: {
+                a: "wyłącznie ministrowi właściwemu do spraw finansów publicznych",
+                b: "Szefowi KAS, jego Zastępcy oraz funkcjonariuszom Służby Celno-Skarbowej",
+                c: "wyłącznie pracownikom urzędów skarbowych niebędącym funkcjonariuszami"
+            },
+            correct: "b"
+        },
+        {
+            text: "Zgodnie z art. 139 ustawy o KAS funkcjonariusze Służby Celno-Skarbowej mogą użyć środków przymusu bezpośredniego:",
+            answers: {
+                a: "na zasadach określonych w ustawie o środkach przymusu bezpośredniego i broni palnej",
+                b: "wyłącznie na podstawie wewnętrznego zarządzenia Szefa KAS, niezależnie od innych ustaw",
+                c: "tylko po zatwierdzeniu przez sąd karny"
+            },
+            correct: "a"
+        },
+        {
+            text: "Na użycie lub wykorzystanie środków przymusu bezpośredniego przez funkcjonariusza Służby Celno-Skarbowej zgodnie z art. 139 przysługuje:",
+            answers: {
+                a: "apelacja do sądu administracyjnego",
+                b: "zażalenie do prokuratora rejonowego właściwego dla miejsca zdarzenia",
+                c: "wyłącznie skarga do Szefa KAS"
+            },
+            correct: "b"
+        },
+        {
+            text: "Art. 139 ustawy o KAS przewiduje, że funkcjonariusze Służby Celno-Skarbowej mogą użyć broni palnej:",
+            answers: {
+                a: "w przypadkach określonych w ustawie o środkach przymusu bezpośredniego i broni palnej, do których odsyła art. 139",
+                b: "w dowolnych sytuacjach, jeśli zaistnieje podejrzenie przestępstwa skarbowego",
+                c: "wyłącznie do oddania strzału ostrzegawczego w górę"
+            },
+            correct: "a"
+        },
+        {
+            text: "Art. 140 ustawy o KAS przewiduje wydanie rozporządzenia przez ministra właściwego do spraw finansów publicznych w celu:",
+            answers: {
+                a: "określenia rodzajów broni palnej i środków przymusu bezpośredniego przysługujących osobom uprawnionym oraz zasad ich przyznawania",
+                b: "ustalenia tabeli wynagrodzeń dla funkcjonariuszy",
+                c: "określenia wysokości podatku akcyzowego"
+            },
+            correct: "a"
+        },
+        // POWIĄZANIE – ZASADY OGÓLNE
+        {
+            text: "Które zdanie najlepiej opisuje zasadę celowości przy stosowaniu środków przymusu bezpośredniego?",
+            answers: {
+                a: "środki stosuje się tylko wtedy, gdy jest to niezbędne do osiągnięcia zgodnego z prawem celu interwencji",
+                b: "środki stosuje się, aby ukarać osobę za niewłaściwe zachowanie",
+                c: "środki stosuje się zawsze, gdy funkcjonariusz ma je do dyspozycji"
+            },
+            correct: "a"
+        },
+        {
+            text: "Zasada niezbędności przy stosowaniu środków przymusu i broni palnej oznacza, że:",
+            answers: {
+                a: "należy zastosować jak najwięcej różnych środków jednocześnie",
+                b: "używa się ich tylko wtedy, gdy nie można osiągnąć celu w inny, łagodniejszy sposób",
+                c: "zawsze trzeba rozpoczynać od broni palnej"
+            },
+            correct: "b"
+        },
+        {
+            text: "Zasada udzielenia pierwszej pomocy po użyciu środków przymusu wynika wprost z:",
+            answers: {
+                a: "art. 36 ustawy o środkach przymusu bezpośredniego i broni palnej",
+                b: "art. 11 ustawy o KAS",
+                c: "art. 25 Kodeksu karnego"
+            },
+            correct: "a"
+        }
+    ];
+
+    const QUIZ_SIZE = 10;
+    let currentSet = [];
+
+    function shuffleArray(array) {
+        const arr = array.slice();
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+    }
+
+    function drawNewSet() {
+        const shuffled = shuffleArray(questions);
+        currentSet = shuffled.slice(0, QUIZ_SIZE);
+        renderQuiz();
+        document.getElementById("result").textContent = "";
+    }
+
+    function renderQuiz() {
+        const quizDiv = document.getElementById("quiz");
+        quizDiv.innerHTML = "";
+
+        currentSet.forEach((q, index) => {
+            const qDiv = document.createElement("div");
+            qDiv.className = "question";
+            qDiv.id = "question-" + index;
+
+            const header = document.createElement("div");
+            header.className = "question-header";
+            header.textContent = "Pytanie " + (index + 1) + ": " + q.text;
+            qDiv.appendChild(header);
+
+            const answersDiv = document.createElement("div");
+            answersDiv.className = "answers";
+
+            ["a", "b", "c"].forEach(letter => {
+                if (q.answers[letter]) {
+                    const label = document.createElement("label");
+                    const input = document.createElement("input");
+                    input.type = "radio";
+                    input.name = "q" + index;
+                    input.value = letter;
+                    label.appendChild(input);
+                    label.appendChild(document.createTextNode(" " + letter.toUpperCase() + ") " + q.answers[letter]));
+                    answersDiv.appendChild(label);
+                }
+            });
+
+            qDiv.appendChild(answersDiv);
+
+            const feedback = document.createElement("div");
+            feedback.className = "feedback";
+            feedback.id = "feedback-" + index;
+            qDiv.appendChild(feedback);
+
+            quizDiv.appendChild(qDiv);
+        });
+    }
+
+    function clearMarks() {
+        currentSet.forEach((_, index) => {
+            const qDiv = document.getElementById("question-" + index);
+            if (qDiv) {
+                qDiv.classList.remove("correct", "incorrect");
+                const fb = document.getElementById("feedback-" + index);
+                if (fb) {
+                    fb.textContent = "";
+                    fb.classList.remove("feedback-correct", "feedback-incorrect");
+                }
+            }
+        });
+    }
+
+    function checkAnswers() {
+        clearMarks();
+        let correctCount = 0;
+
+        currentSet.forEach((q, index) => {
+            const selected = document.querySelector('input[name="q' + index + '"]:checked');
+            const qDiv = document.getElementById("question-" + index);
+            const fb = document.getElementById("feedback-" + index);
+
+            if (!qDiv || !fb) return;
+
+            if (!selected) {
+                qDiv.classList.add("incorrect");
+                fb.classList.add("feedback-incorrect");
+                fb.textContent = "Nie zaznaczono odpowiedzi. Prawidłowa odpowiedź: " +
+                    q.correct.toUpperCase() + ") " + q.answers[q.correct];
+            } else if (selected.value === q.correct) {
+                qDiv.classList.add("correct");
+                fb.classList.add("feedback-correct");
+                fb.textContent = "Dobrze! Prawidłowa odpowiedź: " +
+                    q.correct.toUpperCase() + ") " + q.answers[q.correct];
+                correctCount++;
+            } else {
+                qDiv.classList.add("incorrect");
+                fb.classList.add("feedback-incorrect");
+                fb.textContent = "Błędnie. Prawidłowa odpowiedź: " +
+                    q.correct.toUpperCase() + ") " + q.answers[q.correct];
+            }
+        });
+
+        document.getElementById("result").textContent =
+            "Twój wynik: " + correctCount + " / " + currentSet.length;
+    }
+
+    document.getElementById("newSetBtn").addEventListener("click", drawNewSet);
+    document.getElementById("checkBtn").addEventListener("click", checkAnswers);
+
+    // Pierwsze losowanie przy załadowaniu strony
+    drawNewSet();
+</script>
+</body>
+</html>
