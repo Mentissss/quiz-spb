@@ -1,568 +1,378 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-  <meta charset="UTF-8">
-  <title>Quiz ŚPB</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      max-width: 1000px;
-      margin: 20px auto;
-      padding: 0 10px;
-      line-height: 1.5;
-      background: #f5f5f5;
-    }
-    h1 {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-    .controls {
-      text-align: center;
-      margin: 15px 0 20px 0;
-    }
-    button {
-      margin: 0 6px;
-      padding: 8px 16px;
-      cursor: pointer;
-      font-size: 14px;
-    }
-    #quiz {
-      margin-bottom: 20px;
-    }
-    .question {
-      background: #fff;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      padding: 10px 12px;
-      margin-bottom: 10px;
-    }
-    .question-header {
-      font-weight: bold;
-      margin-bottom: 5px;
-    }
-    .answers label {
-      display: block;
-      margin: 2px 0;
-      cursor: pointer;
-    }
-    .correct {
-      border-color: #2e7d32;
-      background: #e8f5e9;
-    }
-    .incorrect {
-      border-color: #c62828;
-      background: #ffebee;
-    }
-    .feedback {
-      margin-top: 4px;
-      font-size: 0.9em;
-    }
-    .feedback-correct {
-      color: #2e7d32;
-    }
-    .feedback-incorrect {
-      color: #c62828;
-    }
-    #result {
-      text-align: center;
-      font-weight: bold;
-      margin-bottom: 20px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <title>Quiz – środki przymusu bezpośredniego</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 0 10px;
+            line-height: 1.5;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .question {
+            border: 1px solid #ccc;
+            padding: 12px 15px;
+            margin-bottom: 12px;
+            border-radius: 6px;
+        }
+
+        .question-text {
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .options label {
+            display: block;
+            margin: 3px 0;
+            cursor: pointer;
+        }
+
+        .correct {
+            background-color: #d4edda;
+        }
+
+        .incorrect {
+            background-color: #f8d7da;
+        }
+
+        .unanswered {
+            background-color: #fff3cd;
+        }
+
+        .correct-answer {
+            font-weight: bold;
+            text-decoration: underline;
+        }
+
+        .bad {
+            text-decoration: line-through;
+        }
+
+        .buttons {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .buttons button {
+            margin: 0 10px;
+            padding: 8px 16px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        #score {
+            margin-top: 15px;
+            text-align: center;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
-<h1>Quiz ŚPB</h1>
-
-<div class="controls">
-  <button id="newSetBtn">Losuj nowy zestaw (10 pytań)</button>
-  <button id="checkBtn">Sprawdź odpowiedzi</button>
-</div>
+<h1>Quiz – środki przymusu bezpośredniego</h1>
 
 <div id="quiz"></div>
-<div id="result"></div>
+
+<div class="buttons">
+    <button id="checkBtn" onclick="checkAnswers()">Sprawdź odpowiedzi</button>
+    <button id="resetBtn" onclick="resetQuiz()">Rozwiąż ponownie</button>
+</div>
+
+<div id="score"></div>
 
 <script>
-  // CAŁY TEKST PYTAŃ (1–150) – dokładnie z tego, co wkleiłeś
-  const rawQuestions = `
-1. Zgodnie z art. 138 ustawy o KAS, kto jest uprawniony do otrzymania uzbrojenia i środków przymusu bezpośredniego? A. Wyłącznie funkcjonariusze pionu zwalczania przestępczości. B. Szef KAS, Zastępca Szefa KAS oraz funkcjonariusze.  C. Wszyscy pracownicy cywilni i funkcjonariusze zatrudnieni w jednostkach KAS.
-
-2. Funkcjonariusz KAS może użyć środków przymusu bezpośredniego wymienionych w ustawie o środkach przymusu bezpośredniego, z wyjątkiem (na podst. art. 139 ustawy o KAS): A. Kajdanek zespolonych. B. Kaftana bezpieczeństwa i wodnych środków obezwładniających.  C. Psa służbowego.
-
-3. Czy funkcjonariusz KAS może użyć materiałów wybuchowych jako środka do pokonywania zamknięć budowlanych? A. Tak, ustawa o śpb na to pozwala wszystkim służbom. B. Nie, art. 139 ust. 1 ustawy o KAS wyraźnie wyłącza materiały wybuchowe.  C. Tak, ale tylko za zgodą Ministra Finansów.
-
-4. Na czyje rozstrzygnięcie przysługuje zażalenie w przypadku użycia środków przymusu bezpośredniego przez funkcjonariusza KAS (art. 139 ust. 2 ustawy o KAS)? A. Bezpośredniego przełożonego. B. Szefa KAS. C. Prokuratora rejonowego właściwego ze względu na miejsce zdarzenia. 
-
-5. Zgodnie z art. 139 ust. 3 ustawy o KAS, funkcjonariusz może użyć broni palnej m.in. w celu: A. Zatrzymania każdego pojazdu, który nie zatrzymał się do kontroli. B. Odparcia bezpośredniego, bezprawnego zamachu na życie, zdrowie lub wolność uprawnionego lub innej osoby (poprzez odesłanie do ustawy o śpb).  C. Ostrzeżenia osób naruszających przepisy skarbowe (bez zagrożenia życia).
-
-6. Czy funkcjonariusz KAS może użyć broni palnej w bezpośrednim pościgu? A. Tak, za osobą, wobec której użycie broni było dopuszczalne w przypadkach określonych w ustawie (np. zamach na życie).  B. Nie, pościg z bronią jest zabroniony. C. Tak, w pościgu za każdym sprawcą przestępstwa skarbowego.
-
-7. Kto określa w drodze rozporządzenia normy wyposażenia funkcjonariuszy KAS w środki przymusu bezpośredniego? A. Szef KAS. B. Minister właściwy do spraw finansów publicznych.  C. Komendant Główny Policji.
-
-8. Co należy zrobić przed użyciem środka przymusu bezpośredniego (zgodnie z art. 34 ustawy o śpb)? A. Wezwać osobę do zachowania zgodnego z prawem i uprzedzić o zamiarze użycia środka.  B. Oddać strzał ostrzegawczy. C. Wylegitymować osobę.
-
-9. Kiedy funkcjonariusz może odstąpić od wzywania do zachowania zgodnego z prawem przed użyciem śpb? A. Gdy osoba jest niemiła. B. Gdy zwłoka groziłaby bezpośrednim niebezpieczeństwem dla życia, zdrowia lub wolności uprawnionego lub innej osoby.  C. Zawsze, gdy działa w patrolu dwuosobowym.
-
-10. Zasada minimalizacji skutków (art. 7 ustawy o śpb) nakazuje używać środków przymusu w sposób: A. Wyrządzający możliwie najmniejszą szkodę.  B. Najbardziej efektywny, bez względu na szkody. C. Gwarantujący natychmiastowe obezwładnienie za wszelką cenę.
-
-11. Zgodnie z zasadą celowości, środków przymusu używa się: A. W celu ukarania sprawcy za opór. B. W sposób niezbędny do osiągnięcia celów tego użycia lub wykorzystania.  C. Rutynowo przy każdej interwencji.
-
-12. Zasada niezbędności (art. 7 ust. 2 ustawy o śpb) stanowi, że od użycia środków należy odstąpić: A. Gdy cel ich użycia został osiągnięty.  B. Po upływie 10 minut. C. Gdy osoba zacznie krzyczeć.
-
-13. Co należy zrobić niezwłocznie po użyciu śpb, jeżeli nastąpiło zranienie osoby (art. 36 ustawy o śpb)? A. Zabezpieczyć dowody winy tej osoby. B. Udzielić jej pierwszej pomocy lub zapewnić pomoc medyczną.  C. Sporządzić notatkę służbową (przed udzieleniem pomocy).
-
-14. Czy funkcjonariusz KAS jest uprawniony do użycia siły fizycznej w postaci technik ataku i obrony? A. Tak, art. 139 KAS odsyła do art. 12 ust. 1 pkt 1 ustawy o śpb, który obejmuje te techniki.  B. Nie, tylko techniki transportowe. C. Nie, KAS nie może używać siły fizycznej.
-
-15. Zgodnie z art. 6 ustawy o śpb, środki przymusu dobiera się: A. Proporcjonalnie do stopnia zagrożenia, wybierając środek o możliwie najmniejszej dolegliwości.  B. Według uznania, wybierając środek najskuteczniejszy. C. Zawsze zaczynając od najłagodniejszego, bez względu na stopień zagrożenia.
-
-16. Broni palnej używa się wyłącznie, jeżeli (art. 6 ust. 2 ustawy o śpb): A. Sprawca ucieka. B. Użycie środków przymusu bezpośredniego okazało się niewystarczające lub nie jest możliwe.  C. Funkcjonariusz czuje się znieważony.
-
-17. Traktowanie użycia broni palnej jako środka ostatecznego to zasada wynikająca z: A. Art. 7 ustawy o śpb.  B. Kodeksu karnego skarbowego. C. Regulaminu strzelnicy.
-
-18. Wobec kobiet o widocznej ciąży funkcjonariusz KAS może użyć (art. 9 ust. 1 ustawy o śpb): A. Wyłącznie siły fizycznej w postaci technik obezwładnienia.  B. Każdego środka, jeśli jest skuteczny. C. Kajdanek i paralizatora.
-
-19. Czy w przypadku bezpośredniego zamachu na życie funkcjonariusza przez kobietę w ciąży można użyć innych środków niż siła fizyczna? A. Tak, art. 9 ust. 2 ustawy o śpb dopuszcza taki wyjątek w celu odparcia zamachu na życie lub zdrowie.  B. Nie, ustawa bezwzględnie zakazuje. C. Tak, ale tylko gazu łzawiącego.
-
-20. Środków przymusu bezpośredniego można użyć w celu (art. 11 ustawy o śpb): A. Wyegzekwowania wymaganego prawem zachowania zgodnie z wydanym poleceniem.  B. Zmuszenia osoby do przyznania się do winy. C. Prewencyjnego ukarania za brak kultury.
-
-21. Który środek z listy w art. 12 ustawy o śpb jest dozwolony dla KAS? A. Siatka obezwładniająca.  B. Wodne środki obezwładniające. C. Kaftan bezpieczeństwa.
-
-22. Czy pies służbowy w KAS jest środkiem przymusu bezpośredniego? A. Tak (zgodnie z art. 139 KAS i art. 12 ust. 1 pkt 9 śpb).  B. Nie, psy w KAS służą tylko do wykrywania narkotyków, nie są śpb. C. Tak, ale tylko rasy owczarek niemiecki.
-
-23. Czy funkcjonariusz KAS może użyć ręcznego miotacza substancji obezwładniających (gazu)? A. Tak (art. 12 ust. 1 pkt 12 lit. a).  B. Nie. C. Tak, ale tylko w pomieszczeniach.
-
-24. Czy funkcjonariusz KAS może użyć plecakowego miotacza substancji obezwładniających? A. Tak. B. Nie, art. 139 KAS wymienia tylko "lit. a" (ręczne), pomijając "lit. b" (plecakowe).  C. Tak, jeśli ma uprawnienia instruktora.
-
-25. Siły fizycznej używa się m.in. do (art. 4 pkt 4 ustawy o śpb): A. Zadania bólu jako kary. B. Przełamania oporu osoby niepodporządkowującej się poleceniom.  C. Zastraszania.
-
-26. W jakiej pozycji co do zasady zakłada się kajdanki (art. 15 ustawy o śpb)? A. Na ręce trzymane z tyłu.  B. Na ręce trzymane z przodu. C. Jedną rękę z tyłu, drugą z przodu.
-
-27. Kiedy można założyć kajdanki na ręce trzymane z przodu? A. Jeśli osoba jest agresywna. B. Jeśli osoba jest ranna w nogę. C. Jeśli prawdopodobieństwo ucieczki lub stawiania oporu jest nieznaczne. 
-
-28. Czy w KAS można stosować kajdanki zakładane na nogi? A. Nie. B. Tak, art. 139 KAS odsyła do art. 12 ust. 1 pkt 2, który obejmuje kajdanki na nogi.  C. Tak, ale tylko w aresztach śledczych.
-
-29. Czy pałką służbową można zadawać uderzenia i pchnięcia w głowę? A. Tak, w każdym przypadku czynnego oporu. B. Nie, z wyjątkiem sytuacji konieczności odparcia zamachu stwarzającego bezpośrednie zagrożenie życia lub zdrowia.  C. Tak, jeśli pałka jest z gumy.
-
-30. Zgodnie z art. 19 ust. 2 ustawy o środkach przymusu bezpośredniego, pałki służbowej nie stosuje się wobec osób: A. Które stawiają czynny opór (użycie dopuszczalne na podst. art. 19 ust. 1). B. Wobec których użyto kajdanek (chyba że stosuje się dźwignie transportowe). C. Które dokonują ucieczki (użycie dopuszczalne na podst. art. 19 ust. 1 w zw. z art. 11 pkt 10).
-
-31. Psa służbowego używa się co do zasady (art. 21 ust. 2 ustawy o śpb): A. Bez kagańca. B. W kagańcu.  C. Na długiej lince.
-
-32. Kiedy pies służbowy może być użyty bez kagańca? A. W celu odparcia zamachu na życie lub zdrowie uprawnionego lub innej osoby.  B. Podczas przeszukania bagażu. C. Zawsze w nocy.
-
-33. W jakie części ciała nie celuje się pociskami niepenetracyjnymi (art. 23 ust. 3 ustawy o śpb)? A. W nogi. B. W tułów. C. W głowę lub szyję. 
-
-34. Chemicznych środków obezwładniających używa się w celu: A. Krótkotrwałego zakłócenia orientacji przestrzennej lub obezwładnienia.  B. Trwałego oznaczenia sprawcy. C. Uszkodzenia odzieży.
-
-35. Kiedy można użyć przedmiotów przeznaczonych do obezwładniania energią elektryczną (Taser)? A. Zawsze jako pierwszy środek. B. Gdy użycie innych środków jest niemożliwe albo może okazać się nieskuteczne.  C. Tylko wobec zwierząt.
-
-36. Czy funkcjonariusz KAS może użyć przedmiotów paraliżujących prądem wobec osoby w kajdankach? A. Tak. B. Nie (art. 25 ust. 3 ustawy o śpb).  C. Tak, jeśli osoba krzyczy.
-
-37. Kolczatkę drogową wykorzystuje się do: A. Zatrzymania pojazdu mechanicznego lub unieruchomienia zatrzymanego pojazdu.  B. Zatrzymania pieszego. C. Zatrzymania rowerzysty.
-
-38. Czy kolczatki drogowej można użyć do zatrzymania motocykla? A. Tak. B. Nie (art. 30 ust. 6 ustawy o śpb zakazuje użycia wobec pojazdów jednośladowych).  C. Tak, ale tylko na autostradzie.
-
-39. Wykorzystanie kolczatki drogowej musi być co do zasady poprzedzone (art. 30 ust. 4): A. Strzałem w opony. B. Wstrzymaniem ruchu drogowego w obu kierunkach.  C. Wezwaniem przez megafon.
-
-40. Pojazd służbowy może być wykorzystany jako środek przymusu do: A. Zatrzymania lub zablokowania innego pojazdu.  B. Przewożenia dowodów rzeczowych. C. Patrolowania ulic.
-
-41. Środki pirotechniczne o właściwościach ogłuszających lub olśniewających (art. 33 ustawy o śpb) służą do: A. Odwrócenia uwagi lub chwilowego zakłócenia orientacji przestrzennej.  B. Trwałego oślepienia. C. Zadania bólu fizycznego.
-
-42. Decyzję o użyciu środków przymusu bezpośredniego uprawniony podejmuje (art. 35 ust. 1 ustawy o śpb): A. Samodzielnie (co do zasady).  B. Zawsze po konsultacji z dyżurnym. C. Na wniosek prokuratora.
-
-43. Czy w razie niezdolności do służby z powodu choroby spowodowanej wypadkiem przy służbie funkcjonariusz zachowuje uposażenie? A. Tak, zachowuje prawo do świadczeń pieniężnych określonych w ustawie o ubezpieczeniu społecznym.  B. Nie, traci uposażenie. C. Tak, ale tylko 80%.
-
-44. Kiedy funkcjonariusz może odstąpić od udzielenia pierwszej pomocy (art. 36 ust. 2 ustawy o śpb)? A. Gdy udzielenie pomocy może zagrozić życiu, zdrowiu lub bezpieczeństwu uprawnionego lub innej osoby.  B. Gdy nie ma przy sobie rękawiczek. C. Gdy osoba poszkodowana jest agresywna słownie.
-
-45. Czy funkcjonariusz może odstąpić od zapewnienia pomocy medycznej kobiecie ciężarnej, wobec której użyto śpb? A. Tak. B. Nie, nie może odstąpić.  C. Tak, jeśli kobieta odmówi pomocy.
-
-46. Co powinien zrobić funkcjonariusz po użyciu śpb, jeśli nastąpiło zranienie osoby (art. 37 ust. 1 ustawy o śpb)? A. Zabezpieczyć miejsce zdarzenia i ustalić świadków.  B. Uciec. C. Zatrzeć ślady.
-
-47. Kogo należy powiadomić o każdym przypadku użycia broni palnej (art. 50 ustawy o śpb)? A. Przełożonego lub osobę pełniącą służbę dyżurną.  B. Tylko kolegę z patrolu. C. Ministra Finansów bezpośrednio.
-
-48. Czy użycie kajdanek należy dokumentować w notatce? A. Tak, zawsze. B. Tak, chyba że było to użycie prewencyjne i nie nastąpiły skutki w postaci zranienia/śmierci (art. 52 ust. 1 ustawy o śpb).  C. Nie, kajdanek się nie dokumentuje.
-
-49. Czy użycie broni palnej zawsze wymaga sporządzenia notatki i przekazania jej przełożonemu? A. Tak, niezależnie od skutku (art. 51 ust. 2 pkt 2 ustawy o śpb).  B. Tylko jeśli ktoś został ranny. C. Tylko jeśli oddano strzał celowany.
-
-50. Co powinna zawierać notatka z użycia śpb (art. 54 ustawy o śpb)? A. Wyłącznie datę i godzinę. B. Służbowe dane uprawnionego, czas, miejsce, dane osoby, cel, przyczynę, opis skutków.  C. Prywatny numer telefonu funkcjonariusza.
-
-51. Zgodnie z ustawą o KAS (art. 141), czy w urzędzie obsługującym ministra może działać komórka, w której funkcjonariusze wykonują zadania z bronią? A. Tak, właściwa do prowadzenia działań na całym terytorium RP.  B. Nie. C. Tak, ale tylko do ochrony budynków.
-
-52. Czy funkcjonariusz KAS może wykorzystać broń palną do zatrzymania pojazdu? A. Tak, jeśli jego działanie zagraża życiu lub zdrowiu uprawnionego lub innej osoby (art. 47 pkt 1 ustawy o śpb).  B. Nie, nigdy. C. Tak, w każdym przypadku niezatrzymania się do kontroli.
-
-53. Strzał ostrzegawczy oddaje się w: A. Powietrze. B. Bezpiecznym kierunku (art. 48 ust. 2 ustawy o śpb).  C. W kierunku nóg.
-
-54. Czy można odstąpić od oddania strzału ostrzegawczego? A. Tak, jeśli jego zrealizowanie groziłoby bezpośrednim niebezpieczeństwem dla życia lub zdrowia uprawnionego lub innej osoby.  B. Nie, jest to obowiązkowy element procedury. C. Tak, jeśli jest noc.
-
-55. Użycie broni palnej w rozumieniu ustawy o śpb to: A. Oddanie strzału w kierunku osoby z amunicji penetracyjnej.  B. Wycelowanie broni. C. Oddanie strzału w opony.
-
-56. Wykorzystanie broni palnej w rozumieniu ustawy o śpb to: A. Oddanie strzału w kierunku zwierzęcia, przedmiotu lub w innym kierunku niestwarzającym zagrożenia dla osoby.  B. Strzał do napastnika. C. Uderzenie magazynkiem.
-
-57. Czy w skład środków przymusu bezpośredniego dostępnych dla KAS wchodzą granaty hukowo-błyskowe? A. Tak, jako środki pirotechniczne o właściwościach ogłuszających (art. 12 ust. 1 pkt 20 i art. 33 śpb).  B. Nie. C. Tak, ale tylko granaty dymne.
-
-58. Kto określa sposób magazynowania broni palnej w KAS (art. 140 pkt 2 ustawy o KAS)? A. Minister właściwy do spraw finansów publicznych.  B. Naczelnik Urzędu Celno-Skarbowego. C. Magazynier.
-
-59. Czy funkcjonariusz KAS może użyć siatki obezwładniającej wobec drona (bezzałogowego statku powietrznego)? A. Tak, zgodnie z art. 18 ust. 2 ustawy o śpb (SCS ma prawo do środków z pkt 5).  B. Nie. C. Tylko broni palnej.
-
-60. Czy funkcjonariusz KAS może użyć pocisków niepenetracyjnych do obezwładnienia osoby? A. Tak, art. 12 ust. 1 pkt 11 jest wymieniony w art. 139 KAS.  B. Nie. C. Tylko wobec grup powyżej 10 osób.
-
-61. Na czym polega "obrona konieczna" w kontekście braku odpowiedzialności karnej (art. 10a ustawy o śpb)? A. Na odpieraniu bezpośredniego i bezprawnego zamachu na życie, zdrowie lub wolność.  B. Na prewencyjnym ataku. C. Na ucieczce.
-
-62. Czy stan wyższej konieczności może uzasadniać użycie śpb z naruszeniem zasad (art. 10a ust. 2 ustawy o śpb)? A. Tak, w przypadku bezpośredniego zamachu na nienaruszalność granicy, jeśli okoliczności wymagają natychmiastowego działania.  B. Nie, zasady są nienaruszalne. C. Tak, zawsze gdy funkcjonariusz się boi.
-
-63. Czy funkcjonariusz KAS w czasie konwoju może użyć broni palnej? A. Tak, w przypadku konieczności odparcia bezpośredniego zamachu na bezpieczeństwo konwoju (art. 45 pkt 1 lit. e ustawy o śpb).  B. Nie. C. Tylko gazu.
-
-64. Kiedy można użyć pojazdu służbowego do zablokowania drogi? A. W celu zatrzymania innego pojazdu (art. 31 ust. 2 ustawy o śpb).  B. Gdy skończy się paliwo. C. Do kontroli biletów.
-
-65. Środki pirotechniczne olśniewające służą do: A. Chwilowego zakłócenia orientacji przestrzennej lub odwrócenia uwagi.  B. Trwałego uszkodzenia wzroku. C. Oświetlenia drogi.
-
-66. Czy użycie siły fizycznej może polegać na chwytach transportowych? A. Tak (art. 12 ust. 1 pkt 1 lit. a).  B. Nie. C. Tylko chwyty obezwładniające są dozwolone.
-
-67. Czy w przypadku użycia broni palnej przez funkcjonariusza KAS stosuje się te same przesłanki co dla Policji? A. Tak, art. 45 ustawy o śpb wymienia wspólne przypadki (KAS jest uprawniona na podst. ustawy o KAS).  B. Nie, KAS ma zupełnie inną ustawę. C. KAS nie może używać broni.
-
-68. Czy w notatce z wykorzystania broni palnej (np. strzał w opony) trzeba wpisać dane kierowcy? A. Nie, jeśli nie nastąpiły skutki wobec osoby (art. 55 ust. 1 odsyła do art. 54 ust. 3).  B. Tak, zawsze pełne dane. C. Tak, oraz dane pasażerów.
-
-69. Czy funkcjonariusz KAS może użyć prywatnego paralizatora w służbie? A. Nie, art. 5 ustawy o śpb mówi o realizacji zadań przy użyciu środków ustawowych (służbowych).  B. Tak. C. Tak, jeśli jest to sytuacja nagła.
-
-70. W jakie części ciała nie celuje się używając paralizatora? A. W głowę (art. 25 ust. 4 ustawy o śpb).  B. W nogi. C. W ręce.
-
-71. Czy Ustawa o KAS nakłada obowiązek szkolenia przed wyposażeniem w śpb i broń? A. Tak (wymóg przeszkolenia przed wyposażeniem - art. 139 ust. 5).  B. Nie. C. Tylko w broń, śpb można używać bez szkolenia.
-
-72. Zgodnie z prezentacją i art. 34 śpb, "perswazja słowna" (wezwanie do zachowania) to: A. Działanie poprzedzające użycie siły (element taktyki), nie sam środek przymusu.  B. Środek przymusu bezpośredniego. C. Rodzaj tortury.
-
-73. Użycie śpb wobec zwierzęcia to wg definicji ustawy o śpb: A. Wykorzystanie (art. 4 pkt 9).  B. Użycie. C. Zastosowanie.
-
-74. Kiedy można odstąpić od wezwania "Stój, bo strzelam!"? A. Gdy zrealizowanie wezwania groziłoby bezpośrednim niebezpieczeństwem dla życia lub zdrowia (art. 48 ust. 3).  B. Gdy funkcjonariusz zapomni. C. Nigdy.
-
-75. Czy kolczatkę drogową można stosować wobec motocykli? A. Nie (art. 30 ust. 6 ustawy o śpb).  B. Tak. C. Tak, jeśli motocyklista ma kask.
-
-76. Jaki organ jest uprawniony do używania środków przymusu bezpośredniego i broni palnej wg art. 2 ustawy o śpb? A. Funkcjonariusze Służby Celno-Skarbowej.  B. Pracownicy biurowi KAS. C. Inspektorzy BHP.
-
-77. Czy funkcjonariusz KAS może wykorzystać broń palną do unieszkodliwienia zwierzęcia? A. Tak, jeśli zwierzę zagraża życiu lub zdrowiu (art. 47 pkt 5).  B. Nie. C. Tylko jeśli jest to pies.
-
-78. Czy przed użyciem pałki służbowej należy wezwać do zachowania zgodnego z prawem? A. Tak (co do zasady, art. 34).  B. Nie. C. Tylko jeśli są świadkowie.
-
-79. Kto odpowiada za zapewnienie pomocy psychologicznej funkcjonariuszowi po użyciu broni ze skutkiem śmiertelnym? A. Przełożony lub osoba dyżurna (art. 10 ust. 1).  B. Rodzina. C. NFZ.
-
-80. Czy funkcjonariuszowi przysługuje zwrot kosztów obrony prawnej po użyciu broni (przy uniewinnieniu)? A. Tak (art. 10 ust. 2).  B. Nie. C. Tak, ale tylko 50%.
-
-81. Czy można użyć siły fizycznej do pokonania biernego oporu? A. Tak (art. 11 pkt 12).  B. Nie. C. Tylko kajdanek.
-
-82. Co to jest "bierny opór" w kontekście użycia siły? A. Niepodporządkowanie się poleceniom bez użycia przemocy (wynika z art. 11 pkt 12).  B. Atak na funkcjonariusza. C. Ucieczka.
-
-83. Co to jest "czynny opór" w kontekście użycia siły? A. Fizyczne przeciwstawianie się, szarpanie (art. 11 pkt 13).  B. Milczenie. C. Leżenie na ziemi.
-
-84. Czy funkcjonariusz KAS może użyć siatki obezwładniającej wobec osoby? A. Tak (art. 12 ust. 1 pkt 5 i art. 18 ust. 2).  B. Nie. C. Tylko wobec zwierząt.
-
-85. Czy funkcjonariusz może użyć własnego samochodu jako środka przymusu? A. Nie, ustawa wymienia "pojazdy służbowe" (art. 12 ust. 1 pkt 18).  B. Tak. C. Tak, w stanie wyższej konieczności.
-
-86. Czy w skład środków przymusu bezpośredniego KAS wchodzą materiały wybuchowe? A. Nie, są wyłączone w art. 139 ust. 1 ustawy o KAS.  B. Tak. C. Tak, ale tylko małe ładunki.
-
-87. Kiedy używa się kajdanek na nogi? A. Wobec osób agresywnych (art. 15 ust. 5).  B. Zawsze. C. Wobec kobiet.
-
-88. Czy można użyć śpb wobec osoby, która usiłuje odebrać broń funkcjonariuszowi? A. Tak (art. 10a ust. 1 pkt 3).  B. Nie. C. Należy uciekać.
-
-89. Czy w notatce z użycia broni palnej wpisuje się numer seryjny broni? A. Tak (art. 55 ust. 2).  B. Nie. C. Tylko markę.
-
-90. Czy strzał ostrzegawczy musi być oddany w powietrze? A. W bezpiecznym kierunku (art. 48 ust. 2).  B. Zawsze w górę. C. W ziemię.
-
-91. Zgodnie z art. 9 ustawy o śpb, wobec kogo stosuje się ograniczenia użycia śpb? A. Kobiet o widocznej ciąży, osób do lat 13, osób o widocznej niepełnosprawności.  B. Tylko kobiet w ciąży. C. Wszystkich kobiet.
-
-92. Czy funkcjonariusz KAS może użyć siły fizycznej, aby zapobiec autoagresji osoby zatrzymanej? A. Tak (art. 11 pkt 14).  B. Nie. C. Tylko wezwać karetkę.
-
-93. Co to są "techniki obrony"? A. Rodzaj siły fizycznej (art. 12 ust. 1 pkt 1 lit. b).  B. Rodzaj broni. C. Słowna perswazja.
-
-94. Czy KAS może używać granatów dymnych? A. Tak (jako środki pirotechniczne – art. 33 ust. 2).  B. Nie. C. Tylko wojsko.
-
-95. Czy funkcjonariusz może odstąpić od użycia śpb, jeśli cel został osiągnięty? A. Należy odstąpić (art. 7 ust. 2).  B. Może, ale nie musi. C. Nie może.
-
-96. Czy w przypadku ucieczki osoby pozbawionej wolności z zakładu karnego można użyć broni palnej? A. Tak (art. 45 pkt 5).  B. Nie. C. Tylko pałki.
-
-97. Czy użycie broni palnej w pościgu musi być poprzedzone okrzykiem? A. Tak ("Stój, bo strzelam!"), chyba że zachodzą przesłanki odstąpienia.  B. Nie. C. Wystarczy strzał ostrzegawczy.
-
-98. Czy KAS może używać ręcznych miotaczy gazu? A. Tak (art. 12 ust. 1 pkt 12 lit. a).  B. Nie. C. Tylko pieprzowych w żelu.
-
-99. Czy KAS może używać plecakowych miotaczy gazu? A. Nie (art. 139 ust. 1 ustawy o KAS nie wymienia pkt 12 lit. b).  B. Tak. C. Tak, przy tłumieniu zamieszek.
-
-100. Czy w przypadku zranienia zwierzęcia przy użyciu śpb należy powiadomić przełożonego? A. Tak (art. 37 ust. 1).  B. Nie. C. Tylko właściciela.
-
-101. Czy funkcjonariusz może użyć śpb wobec osoby, która niszczy mienie? A. Tak (art. 11 pkt 8).  B. Nie. C. Tylko jeśli mienie jest prywatne.
-
-102. Czy "chwyt obezwładniający" to środek przymusu bezpośredniego? A. Tak (siła fizyczna).  B. Nie. C. To tylko element szkolenia.
-
-103. Kto może zwolnić funkcjonariusza z obowiązku udzielenia pierwszej pomocy? A. Okoliczności zagrażające życiu lub zdrowiu funkcjonariusza (art. 36 ust. 2).  B. Przełożony. C. Nikt.
-
-104. Czy funkcjonariusz ma prawo do urlopu wypoczynkowego? A. Tak (art. 216 ustawy o KAS).  B. Nie. C. Tylko dyrektorzy.
-
-105. Czy funkcjonariusz KAS ma prawo zatrzymywać pojazdy? A. Tak (art. 133 ust. 2 pkt 5 ustawy o KAS odsyła do Prawa o ruchu drogowym).  B. Nie. C. Tylko na granicy.
-
-106. Czy funkcjonariusz KAS ma prawo do nakładania mandatów karnych? A. Tak (art. 133 ust. 1 pkt 6 ustawy o KAS).  B. Nie. C. Tylko Policja.
-
-107. Czy funkcjonariusz KAS może legitymować osoby? A. Tak (art. 64 ust. 1 pkt 4 ustawy o KAS).  B. Nie. C. Tylko w urzędzie.
-
-108. Czy funkcjonariusz KAS może przeszukiwać lokale mieszkalne? A. Tak, w trybie i przypadkach określonych w przepisach (art. 133 ust. 1 pkt 1 ustawy o KAS).  B. Nie. C. Tylko lokale użytkowe.
-
-109. Czy funkcjonariusz KAS może zatrzymywać osoby? A. Tak (art. 133 ust. 1 pkt 1 ustawy o KAS).  B. Nie. C. Tylko cudzoziemców.
-
-110. Czy funkcjonariusz KAS może dokonywać konwoju towarów? A. Tak (art. 67 ustawy o KAS).  B. Nie. C. Tylko pieniędzy.
-
-111. Czy funkcjonariusz KAS może użyć psa służbowego do przeszukania towarów? A. Tak (art. 64 ust. 2 pkt 1 ustawy o KAS).  B. Nie. C. Tylko do ochrony.
-
-112. Czy kontrola celno-skarbowa może być wykonywana w lokalu mieszkalnym? A. Tak, jeśli jest związany z prowadzoną działalnością (art. 59 ust. 1 ustawy o KAS).  B. Nie, konstytucja zabrania. C. Tylko za zgodą mieszkańca.
-
-113. Czy funkcjonariusz KAS może pobierać próbki towarów? A. Tak (art. 64 ust. 1 pkt 12 ustawy o KAS).  B. Nie. C. Tylko jeśli towar jest płynny.
-
-114. Czy funkcjonariusz KAS może kontrolować przesyłki pocztowe? A. Tak (art. 64 ust. 2 pkt 4 ustawy o KAS).  B. Nie. C. Tylko paczki z zagranicy.
-
-115. Czy funkcjonariusz KAS może zatrzymywać statki? A. Tak (art. 64 ust. 2 pkt 6 ustawy o KAS).  B. Nie. C. Tylko łódki wędkarskie.
-
-116. Czy funkcjonariusz KAS może badać rodzaj paliwa w zbiorniku pojazdu? A. Tak (art. 64 ust. 2 pkt 7 ustawy o KAS).  B. Nie. C. Tylko w cysternach.
-
-117. Czy funkcjonariusz KAS może użyć zamknięć urzędowych (plomb)? A. Tak (art. 64 ust. 1 pkt 18 ustawy o KAS).  B. Nie. C. Tylko na granicy.
-
-118. Czy funkcjonariusz KAS może żądać okazania dokumentów tożsamości? A. Tak (art. 64 ust. 1 pkt 4 ustawy o KAS).  B. Nie. C. Tylko paszportu.
-
-119. Czy funkcjonariusz KAS może przeszukiwać osoby? A. Tak (art. 64 ust. 2 pkt 2 ustawy o KAS).  B. Nie. C. Tylko mężczyzn.
-
-120. Czy funkcjonariusz KAS może użyć urządzeń technicznych do rewizji towarów? A. Tak (art. 64 ust. 2 pkt 1 ustawy o KAS).  B. Nie. C. Tylko rentgena.
-
-121. Czy funkcjonariusz KAS ma prawo wstępu na grunt kontrolowanego? A. Tak (art. 64 ust. 1 pkt 2 ustawy o KAS).  B. Nie. C. Tylko do biura.
-
-122. Czy funkcjonariusz KAS może przesłuchiwać świadków? A. Tak (art. 64 ust. 1 pkt 5 ustawy o KAS).  B. Nie. C. Tylko podejrzanych.
-
-123. Czy funkcjonariusz KAS może zasięgać opinii biegłych? A. Tak (art. 64 ust. 1 pkt 7 ustawy o KAS).  B. Nie. C. Tylko w sądzie.
-
-124. Czy funkcjonariusz KAS może sporządzać szkice i robić zdjęcia podczas kontroli? A. Tak (art. 64 ust. 1 pkt 10 ustawy o KAS).  B. Nie. C. Tylko za zgodą kontrolowanego.
-
-125. Czy funkcjonariusz KAS może żądać przeprowadzenia spisu z natury? A. Tak (art. 64 ust. 1 pkt 9 ustawy o KAS).  B. Nie. C. Tylko w magazynach celnych.
-
-126. Co zawiera akt mianowania funkcjonariusza? A. Imię, nazwisko, datę mianowania, rodzaj służby (art. 158 ust. 2 ustawy o KAS).  B. Wzrost i wagę. C. Adres zamieszkania.
-
-127. Czy funkcjonariusz może wykonywać dodatkowe zajęcia zarobkowe? A. Tak, za zgodą kierownika jednostki organizacyjnej (art. 205 ustawy o KAS).  B. Nie, nigdy. C. Tak, bez ograniczeń.
-
-128. Czy funkcjonariusz KAS może być członkiem partii politycznej? A. Nie (art. 202 ust. 1 pkt 1 ustawy o KAS).  B. Tak. C. Tak, jeśli nie pełni funkcji kierowniczej.
-
-129. Czy na sposób przeprowadzenia zatrzymania osoby przysługuje zażalenie? A. Tak, do prokuratora (art. 133 ust. 2 ustawy o KAS).  B. Nie. C. Do sądu.
-
-130. Czy zatrzymanie osoby jest środkiem ostatecznym? A. Tak, stosuje się je tylko gdy inne środki są bezcelowe (art. 134 ust. 3 ustawy o KAS).  B. Nie, jest środkiem pierwszym. C. Zależy od decyzji funkcjonariusza.
-
-131. Gdzie należy doprowadzić osobę zatrzymaną po wykonaniu czynności? A. Do najbliższej jednostki Policji lub Straży Granicznej (art. 134 ust. 4 ustawy o KAS).  B. Do domu. C. Do urzędu skarbowego.
-
-132. Czy osobę zatrzymaną należy poddać badaniu lekarskiemu? A. W razie uzasadnionej potrzeby (art. 134 ust. 5 ustawy o KAS).  B. Zawsze. C. Nigdy.
-
-133. Czy funkcjonariusz KAS musi szanować godność człowieka? A. Tak (art. 134 ust. 1 ustawy o KAS).  B. Nie, liczy się skuteczność. C. Tylko obywateli polskich.
-
-134. Czy czynności służbowe powinny być wykonywane w sposób najmniej naruszający dobra osobiste? A. Tak (art. 134 ust. 2 ustawy o KAS).  B. Nie. C. Nie ma takiej zasady.
-
-135. Czy zatrzymanie statku na morzu terytorialnym może wykonać każda jednostka pływająca? A. Nie, tylko oznakowane jednostki pływające KAS (art. 136 ust. 1 ustawy o KAS).  B. Tak. C. Tak, jeśli ma broń.
-
-136. Czy dowódca jednostki pływającej KAS może wezwać statek do zatrzymania? A. Tak (art. 136 ust. 3 pkt 1 ustawy o KAS).  B. Nie. C. Tylko w porcie.
-
-137. Czy dowódca jednostki pływającej KAS może wejść na pokład kontrolowanego statku? A. Tak (art. 136 ust. 3 pkt 2 ustawy o KAS).  B. Nie. C. Tylko za zgodą kapitana.
-
-138. Czy jednostka pływająca KAS może zmusić statek do zawinięcia do portu? A. Tak, jeśli kapitan nie stosuje się do poleceń (art. 136 ust. 3 pkt 3 ustawy o KAS).  B. Nie. C. Tylko statki handlowe.
-
-139. Jakie sygnały stosuje jednostka pływająca KAS do zatrzymania statku? A. Międzynarodowego kodu sygnałowego i niebieskie światło błyskowe (art. 136 ust. 6 ustawy o KAS).  B. Czerwone raca. C. Syrenę policyjną.
-
-140. Co robi dowódca jednostki KAS, jeśli statek nie zatrzyma się na wezwanie? A. Wzywa Straż Graniczną (art. 136 ust. 7 ustawy o KAS).  B. Strzela w kadłub. C. Wraca do portu.
-
-141. Czy KAS współpracuje ze Strażą Graniczną przy zatrzymywaniu statków? A. Tak (art. 136 ust. 7 ustawy o KAS).  B. Nie. C. Tylko na rzekach.
-
-142. Czy funkcjonariusz KAS korzysta z ochrony prawnej przewidzianej dla funkcjonariuszy publicznych? A. Tak (art. 210 ustawy o KAS).  B. Nie. C. Tylko w godzinach pracy.
-
-143. Czy prawo do uposażenia powstaje z dniem mianowania? A. Tak (art. 223 ust. 1 ustawy o KAS).  B. Nie, po miesiącu. C. Po złożeniu ślubowania.
-
-144. Czy funkcjonariusz może być zawieszony w pełnieniu obowiązków? A. Tak, np. w przypadku wszczęcia postępowania karnego umyślnego (art. 178 ust. 1 ustawy o KAS).  B. Nie. C. Tylko za pijaństwo.
-
-145. Czy okres zawieszenia wlicza się do okresu służby? A. Tak, ale pod warunkiem uniewinnienia/umorzenia (art. 178 ust. 6 ustawy o KAS).  B. Zawsze. C. Nigdy.
-
-146. Czy funkcjonariusz zawieszony otrzymuje pełne uposażenie? A. Nie, 50% (art. 248 ust. 1 ustawy o KAS).  B. Tak. C. Nie otrzymuje nic.
-
-147. Ile trwa służba przygotowawcza w KAS? A. 2 lata (art. 154 ust. 3 ustawy o KAS).  B. Rok. C. 3 lata.
-
-148. Czy funkcjonariusz ma prawo do dodatkowego urlopu za staż? A. Tak, np. 5 dni po 15 latach (art. 216 ust. 4 ustawy o KAS).  B. Nie. C. Tylko po 30 latach.
-
-149. Czy funkcjonariusz może zrzeszać się w związkach zawodowych? A. Tak (art. 222 ustawy o KAS).  B. Nie. C. Tylko w jednym.
-
-150. Czy funkcjonariusz składa oświadczenie majątkowe? A. Tak (art. 200 ustawy o KAS).  B. Nie. C. Tylko kierownicy.
-`;
-
-  // KLUCZ (1–150) – dokładnie jak podałeś
-  const rawKey = `
-1 – B 2 – B 3 – B 4 – C 5 – B 6 – A 7 – B 8 – A 9 – B 10 – A 11 – B 12 – A 13 – B 14 – A 15 – A 16 – B 17 – A 18 – A 19 – A 20 – A 21 – A 22 – A 23 – A 24 – B 25 – B 26 – A 27 – C 28 – B 29 – B 30 – B 31 – B 32 – A 33 – C 34 – A 35 – B 36 – B 37 – A 38 – B 39 – B 40 – A 41 – A 42 – A 43 – A 44 – A 45 – B 46 – A 47 – A 48 – B 49 – A 50 – B 51 – A 52 – A 53 – B 54 – A 55 – A 56 – A 57 – A 58 – A 59 – A 60 – A 61 – A 62 – A 63 – A 64 – A 65 – A 66 – B 67 – A 68 – A 69 – A 70 – A 71 – A 72 – A 73 – A 74 – A 75 – A 76 – A 77 – A 78 – A 79 – A 80 – A 81 – A 82 – A 83 – A 84 – A 85 – A 86 – A 87 – A 88 – A 89 – A 90 – A 91 – A 92 – A 93 – A 94 – A 95 – A 96 – A 97 – A 98 – A 99 – A 100 – A 101 – A 102 – A 103 – A 104 – A 105 – A 106 – A 107 – A 108 – A 109 – A 110 – A 111 – A 112 – A 113 – A 114 – A 115 – A 116 – A 117 – A 118 – A 119 – A 120 – A 121 – A 122 – A 123 – A 124 – A 125 – A 126 – A 127 – A 128 – A 129 – A 130 – A 131 – A 132 – A 133 – A 134 – A 135 – A 136 – A 137 – A 138 – A 139 – A 140 – A 141 – A 142 – A 143 – A 144 – A 145 – A 146 – A 147 – A 148 – A 149 – A 150 – A
-`;
-
-  const QUIZ_SIZE = 10;
-  let allQuestions = [];
-  let currentSet = [];
-
-  function parseKey(raw) {
-    const map = {};
-    const re = /(\d+)\s*[–-]\s*([ABC])/g;
-    let m;
-    while ((m = re.exec(raw)) !== null) {
-      map[parseInt(m[1], 10)] = m[2].toLowerCase();
+    const questionsData = [
+        {
+            text: "Do środków przymusu bezpośredniego należą:",
+            options: {
+                A: "Pociski niepenetracyjne, pies służbowy, kajdanki",
+                B: "Pałka służbowa, chemiczne środki obezwładniające w postaci ręcznych miotaczy substancji obezwładniających, pojazdy służbowe",
+                C: "Obie odpowiedzi prawidłowe"
+            },
+            correct: "C"
+        },
+        {
+            text: "Przez użycie środka przymusu bezpośredniego należy rozumieć:",
+            options: {
+                A: "Zastosowanie środka przymusu bezpośredniego w celu unieruchomienia pojazdu",
+                B: "Zastosowanie środka przymusu bezpośredniego wobec osoby",
+                C: "Zastosowanie środka przymusu bezpośredniego wobec osoby i zwierzęcia"
+            },
+            correct: "B"
+        },
+        {
+            text: "Jakie ŚPB może wykorzystać funkcjonariusz SCS wobec zwierzęcia, którego zachowanie zagraża bezpośrednio życiu lub zdrowiu uprawnionego lub innej osoby?",
+            options: {
+                A: "Pociski niepenetracyjne, chemiczne środki obezwładniające w postaci ręcznych miotaczy substancji obezwładniających",
+                B: "Przedmioty przeznaczone do obezwładniania osób za pomocą energii elektrycznej lub pałka służbowa",
+                C: "Obie odpowiedzi są prawidłowe"
+            },
+            correct: "C"
+        },
+        {
+            text: "W przypadku gdy pozwalają na to okoliczności zdarzenia uprawniony może użyć jednocześnie więcej niż jeden środek przymusu bezpośredniego lub wykorzystać jednocześnie więcej niż jeden taki środek, na zasadach określonych w ustawie. To jest:",
+            options: {
+                A: "Kajdanki założone na ręce trzymane z tyłu oraz przedmioty przeznaczone do obezwładniania osób za pomocą energii elektrycznej",
+                B: "Kajdanki założone na ręce, a następnie pałka służbowa w celu dźwigni transportowej",
+                C: "Obie odpowiedzi są prawidłowe"
+            },
+            correct: "B"
+        },
+        {
+            text: "Do środków przymusu bezpośredniego nie należy:",
+            options: {
+                A: "Siła fizyczna",
+                B: "Kajdanki i pies służbowy",
+                C: "Broń palna"
+            },
+            correct: "C"
+        },
+        {
+            text: "Za wyjątkiem sytuacji, w których zachodzi konieczność odparcia zamachu stwarzającego bezpośrednie zagrożenie życia lub zdrowia uprawnionego lub innej osoby:",
+            options: {
+                A: "Pałką służbową nie zadaje się uderzeń i pchnięć w głowę, szyję, brzuch",
+                B: "Nieumięśnione oraz szczególnie wrażliwe części ciała",
+                C: "Obie odpowiedzi są prawidłowe"
+            },
+            correct: "C"
+        },
+        {
+            text: "Chemiczne środki obezwładniające w postaci ręcznych miotaczy substancji obezwładniających można używać, jeśli jest cel:",
+            options: {
+                A: "Krótkotrwałego, odwracalnego pozbawienia wzroku",
+                B: "Zadanie przeciwnikowi krótkotrwałego, odwracalnego bólu",
+                C: "Krótkotrwałego zakłócenia orientacji przestrzennej lub obezwładnienia"
+            },
+            correct: "C"
+        },
+        {
+            text: "Gdzie uprawniony dokumentuje użycie lub wykorzystanie środka przymusu bezpośredniego?",
+            options: {
+                A: "Uprawniony dokumentuje w notatce użycie lub wykorzystanie środka przymusu bezpośredniego",
+                B: "W określonych okolicznościach może dokumentować w notatniku służbowym",
+                C: "Obie odpowiedzi są prawidłowe"
+            },
+            correct: "C"
+        },
+        {
+            text: "Wykorzystanie kolczatki drogowej. W czasie zatrzymania pojazdu, trzeba wstrzymać ruch w obu kierunkach w odległości:",
+            options: {
+                A: "150 m",
+                B: "100 m",
+                C: "200 m"
+            },
+            correct: "B"
+        },
+        {
+            text: "Przedmioty przeznaczone do obezwładniania osób za pomocą energii elektrycznej można użyć:",
+            options: {
+                A: "W stosunku do osób oraz zwierząt",
+                B: "Do zatrzymania osoby, udaremnienia jej ucieczki lub pościgu za tą osobą",
+                C: "Obie odpowiedzi są prawidłowe"
+            },
+            correct: "B"
+        },
+        {
+            text: "Kto decyduje o prewencyjnym użyciu kajdanek przez funkcjonariuszy SCS?",
+            options: {
+                A: "Bezpośredni przełożony",
+                B: "Osoba dowodząca podczas czynności",
+                C: "Funkcjonariusz"
+            },
+            correct: "C"
+        },
+        {
+            text: "Chemicznych środów obezwładniających w postaci ręcznych miotaczy substancji obezwładniających funkcjonariusz może użyć w przypadku:",
+            options: {
+                A: "Ujęcia osoby, udaremnienia jej ucieczki lub pościgu za tą osobą oraz przeciwdziałania niszczeniu mienia",
+                B: "Zatrzymania osoby, udaremnienia jej ucieczki lub pościgu za tą osobą",
+                C: "Obie odpowiedzi są prawidłowe"
+            },
+            correct: "C"
+        },
+        {
+            text: "Uprawniony nie może odstąpić od zapewnienia i udzielenia medycznych czynności ratunkowych:",
+            options: {
+                A: "Osobie poszkodowanej w wypadku drogowym",
+                B: "Osobie poszkodowanej w zdarzeniu losowym",
+                C: "Kobiecie ciężarnej, wobec której użyto środka przymusu bezpośredniego"
+            },
+            correct: "C"
+        },
+        {
+            text: "Przedmiotów przeznaczonych do obezwładniania osób za pomocą energii elektrycznej używa się w celu:",
+            options: {
+                A: "Krótkotrwałego obezwładnienia osoby lub zwierzęcia",
+                B: "Zapewnienia sobie oraz osobom postronnym bezpieczeństwa podczas zakładania kajdanek",
+                C: "Krótkotrwałego obezwładnienia osoby"
+            },
+            correct: "C"
+        },
+        {
+            text: "Kolczatki drogowej nie wykorzystuje się w celu zatrzymania pojazdu:",
+            options: {
+                A: "Jednośladowego",
+                B: "Osobowego",
+                C: "Ciężarowego"
+            },
+            correct: "A"
+        },
+        {
+            text: "Do środków pirotechnicznych o właściwościach ogłuszających lub olśniewających zalicza się w szczególności:",
+            options: {
+                A: "Granaty hukowo-błyskowe",
+                B: "Granaty dymne oraz petardy",
+                C: "Obie odpowiedzi są prawidłowe"
+            },
+            correct: "C"
+        },
+        {
+            text: "Wykorzystanie środka przymusu bezpośredniego to:",
+            options: {
+                A: "Zastosowanie środka przymusu bezpośredniego wobec osoby albo zastosowanie w celu zatrzymania, zablokowania lub unieruchomienia pojazdu",
+                B: "Zastosowanie środka przymusu bezpośredniego wobec zwierzęcia oraz osoby albo zastosowanie go w celu zatrzymania, zablokowania lub unieruchomienia pojazdu",
+                C: "Zastosowanie środka przymusu bezpośredniego wobec zwierzęcia albo zastosowanie go w celu zatrzymania, zablokowania lub unieruchomienia pojazdu"
+            },
+            correct: "C"
+        },
+        {
+            text: "Jakiego ŚPB można użyć podczas stawiania biernego oporu?",
+            options: {
+                A: "Siła fizyczna, pociski niepenetracyjne",
+                B: "Siatka obezwładniająca",
+                C: "Siła fizyczna oraz chemiczne środki obezwładniające"
+            },
+            correct: "C"
+        },
+        {
+            text: "Wobec kobiet w ciąży, osób, których wygląd wskazuje na wiek do 13 lat lub osób o widocznej niepełnosprawności, uprawniony może użyć wyłącznie:",
+            options: {
+                A: "Siła fizyczna w postaci technik transportowych",
+                B: "Siła fizyczna w postaci technik obrony",
+                C: "Siła fizyczna w postaci technik obezwładnienia"
+            },
+            correct: "C"
+        },
+        {
+            text: "Na użycie lub wykorzystanie środków przymusu bezpośredniego przysługuje zażalenie do:",
+            options: {
+                A: "Prokuratury właściwej dla miejscowości",
+                B: "Naczelnika UCS",
+                C: "Funkcjonariusza"
+            },
+            correct: "A"
+        }
+    ];
+
+    let questions = [];
+
+    function shuffle(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
     }
-    return map;
-  }
 
-  function parseQuestions(raw, keyMap) {
-    const list = [];
-    const text = raw.replace(/\r\n/g, "\n");
-    const re = /(\d+)\.\s*([\s\S]*?)(?=(\n\d+\.\s)|$)/g;
-    let m;
-    while ((m = re.exec(text)) !== null) {
-      const num = parseInt(m[1], 10);
-      let block = m[2].trim();
-      if (!block) continue;
+    function renderQuiz() {
+        const container = document.getElementById("quiz");
+        container.innerHTML = "";
 
-      // Spłaszczenie wielokrotnych spacji i nowych linii
-      block = block.replace(/\s+/g, " ");
+        questions.forEach((q, index) => {
+            const qDiv = document.createElement("div");
+            qDiv.className = "question";
 
-      const idxA = block.indexOf(" A.");
-      const idxB = block.indexOf(" B.");
-      const idxC = block.indexOf(" C.");
+            const qText = document.createElement("p");
+            qText.className = "question-text";
+            qText.textContent = (index + 1) + ". " + q.text;
+            qDiv.appendChild(qText);
 
-      if (idxA === -1 || idxB === -1 || idxC === -1) continue;
+            const optionsDiv = document.createElement("div");
+            optionsDiv.className = "options";
 
-      const qText = block.slice(0, idxA).trim();
-      const aText = block.slice(idxA + 3, idxB).trim();
-      const bText = block.slice(idxB + 3, idxC).trim();
-      const cText = block.slice(idxC + 3).trim();
+            ["A", "B", "C"].forEach(letter => {
+                const label = document.createElement("label");
+                const input = document.createElement("input");
+                const id = "q" + index + "_" + letter;
 
-      const correct = keyMap[num] || "a";
+                input.type = "radio";
+                input.name = "q" + index;
+                input.value = letter;
+                input.id = id;
 
-      list.push({
-        number: num,
-        text: qText,
-        answers: { a: aText, b: bText, c: cText },
-        correct
-      });
+                label.setAttribute("for", id);
+                label.appendChild(input);
+                label.appendChild(document.createTextNode(" " + letter + ". " + q.options[letter]));
+
+                optionsDiv.appendChild(label);
+            });
+
+            qDiv.appendChild(optionsDiv);
+            container.appendChild(qDiv);
+        });
     }
-    return list;
-  }
 
-  function shuffle(arr) {
-    const a = arr.slice();
-    for (let i = a.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [a[i], a[j]] = [a[j], a[i]];
+    function initQuiz() {
+        questions = questionsData.map(q => ({...q}));
+        shuffle(questions);
+        renderQuiz();
     }
-    return a;
-  }
 
-  function drawNewSet() {
-    const shuffled = shuffle(allQuestions);
-    currentSet = shuffled.slice(0, QUIZ_SIZE);
-    renderQuiz();
-    document.getElementById("result").textContent = "";
-  }
+    function checkAnswers() {
+        const questionBlocks = document.querySelectorAll(".question");
+        let score = 0;
 
-  function renderQuiz() {
-    const quizDiv = document.getElementById("quiz");
-    quizDiv.innerHTML = "";
+        questionBlocks.forEach((block, index) => {
+            block.classList.remove("correct", "incorrect", "unanswered");
 
-    currentSet.forEach((q, index) => {
-      const qDiv = document.createElement("div");
-      qDiv.className = "question";
-      qDiv.id = "question-" + index;
+            const q = questions[index];
+            const selected = block.querySelector("input[type=radio]:checked");
+            const labels = block.querySelectorAll("label");
 
-      const header = document.createElement("div");
-      header.className = "question-header";
-      header.textContent = "Pytanie " + (index + 1) + " (nr " + q.number + "): " + q.text;
-      qDiv.appendChild(header);
+            labels.forEach(label => {
+                label.classList.remove("correct-answer", "bad");
+            });
 
-      const answersDiv = document.createElement("div");
-      answersDiv.className = "answers";
+            if (!selected) {
+                block.classList.add("unanswered");
+                return;
+            }
 
-      ["a", "b", "c"].forEach(letter => {
-        const label = document.createElement("label");
-        const input = document.createElement("input");
-        input.type = "radio";
-        input.name = "q" + index;
-        input.value = letter;
-        label.appendChild(input);
-        label.appendChild(
-          document.createTextNode(" " + letter.toUpperCase() + ") " + q.answers[letter])
-        );
-        answersDiv.appendChild(label);
-      });
+            const value = selected.value;
 
-      qDiv.appendChild(answersDiv);
+            if (value === q.correct) {
+                score++;
+                block.classList.add("correct");
+                selected.parentElement.classList.add("correct-answer");
+            } else {
+                block.classList.add("incorrect");
+                selected.parentElement.classList.add("bad");
 
-      const fb = document.createElement("div");
-      fb.className = "feedback";
-      fb.id = "feedback-" + index;
-      qDiv.appendChild(fb);
+                labels.forEach(label => {
+                    const input = label.querySelector("input");
+                    if (input && input.value === q.correct) {
+                        label.classList.add("correct-answer");
+                    }
+                });
+            }
+        });
 
-      quizDiv.appendChild(qDiv);
-    });
-  }
+        document.getElementById("score").textContent =
+            "Twój wynik: " + score + " / " + questions.length;
+    }
 
-  function clearMarks() {
-    currentSet.forEach((_, index) => {
-      const qDiv = document.getElementById("question-" + index);
-      const fb = document.getElementById("feedback-" + index);
-      if (qDiv) qDiv.classList.remove("correct", "incorrect");
-      if (fb) {
-        fb.textContent = "";
-        fb.classList.remove("feedback-correct", "feedback-incorrect");
-      }
-    });
-  }
+    function resetQuiz() {
+        document.getElementById("score").textContent = "";
+        initQuiz();
+    }
 
-  function checkAnswers() {
-    clearMarks();
-    let score = 0;
-
-    currentSet.forEach((q, index) => {
-      const selected = document.querySelector('input[name="q' + index + '"]:checked');
-      const qDiv = document.getElementById("question-" + index);
-      const fb = document.getElementById("feedback-" + index);
-      if (!qDiv || !fb) return;
-
-      if (!selected) {
-        qDiv.classList.add("incorrect");
-        fb.classList.add("feedback-incorrect");
-        fb.textContent =
-          "Nie zaznaczono odpowiedzi. Prawidłowa: " +
-          q.correct.toUpperCase() +
-          ") " +
-          q.answers[q.correct];
-        return;
-      }
-
-      if (selected.value === q.correct) {
-        qDiv.classList.add("correct");
-        fb.classList.add("feedback-correct");
-        fb.textContent =
-          "Dobrze. Prawidłowa: " +
-          q.correct.toUpperCase() +
-          ") " +
-          q.answers[q.correct];
-        score++;
-      } else {
-        qDiv.classList.add("incorrect");
-        fb.classList.add("feedback-incorrect");
-        fb.textContent =
-          "Błędnie. Prawidłowa: " +
-          q.correct.toUpperCase() +
-          ") " +
-          q.answers[q.correct];
-      }
-    });
-
-    document.getElementById("result").textContent =
-      "Twój wynik: " + score + " / " + currentSet.length;
-  }
-
-  document.getElementById("newSetBtn").addEventListener("click", drawNewSet);
-  document.getElementById("checkBtn").addEventListener("click", checkAnswers);
-
-  // Inicjalizacja – parsowanie pytań i klucza, pierwsze losowanie
-  const keyMap = parseKey(rawKey);
-  allQuestions = parseQuestions(rawQuestions, keyMap);
-  drawNewSet();
+    document.addEventListener("DOMContentLoaded", initQuiz);
 </script>
 </body>
 </html>
-
-
