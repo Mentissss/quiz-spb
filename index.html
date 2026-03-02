@@ -3,233 +3,178 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz Wiedzy o Broni Palnej</title>
+    <title>Egzamin - Wiedza o Broni</title>
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4f7f6;
-            color: #333;
-            line-height: 1.6;
-            margin: 0;
-            padding: 20px;
+        :root {
+            --primary: #2c3e50;
+            --success: #27ae60;
+            --danger: #e74c3c;
+            --light: #ecf0f1;
         }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: #fff;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
-        h1 {
-            text-align: center;
-            color: #2c3e50;
-            margin-bottom: 30px;
-        }
-        .controls {
-            text-align: center;
-            margin-bottom: 30px;
-            position: sticky;
-            top: 0;
-            background: #fff;
-            padding: 10px 0;
-            z-index: 100;
-            border-bottom: 1px solid #eee;
-        }
-        button {
-            padding: 12px 25px;
-            font-size: 16px;
-            cursor: pointer;
-            border: none;
-            border-radius: 6px;
-            transition: background 0.3s;
-            margin: 5px;
-        }
-        .btn-start { background-color: #27ae60; color: white; }
-        .btn-start:hover { background-color: #219150; }
-        .btn-reset { background-color: #e67e22; color: white; }
-        .btn-reset:hover { background-color: #d35400; }
-        .btn-finish { background-color: #2980b9; color: white; display: block; width: 100%; margin-top: 30px; }
-        .btn-finish:hover { background-color: #2471a3; }
-
-        .question-block {
-            margin-bottom: 25px;
-            padding: 20px;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-        }
-        .question-text {
-            font-weight: bold;
-            margin-bottom: 15px;
-            font-size: 1.1em;
-        }
-        .option {
-            display: block;
-            margin: 10px 0;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        .option:hover { background-color: #f9f9f9; }
-        input[type="radio"] { margin-right: 10px; }
-
-        /* Klasy po zakończeniu testu */
-        .correct { background-color: #d4edda !important; border-color: #28a745 !important; color: #155724; font-weight: bold; }
-        .wrong { background-color: #f8d7da !important; border-color: #dc3545 !important; color: #721c24; }
+        body { font-family: sans-serif; background: #f8f9fa; margin: 0; padding: 20px; color: var(--primary); }
+        .wrapper { max-width: 900px; margin: 0 auto; background: #fff; padding: 40px; border-radius: 10px; shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .sticky-nav { position: sticky; top: 0; background: #fff; padding: 15px 0; border-bottom: 2px solid var(--light); z-index: 1000; text-align: center; }
+        h1 { text-align: center; color: var(--primary); }
+        .btn { padding: 12px 24px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.3s; margin: 0 10px; }
+        .btn-start { background: var(--success); color: white; }
+        .btn-reset { background: #f39c12; color: white; }
+        .btn-check { background: var(--primary); color: white; width: 100%; margin-top: 40px; font-size: 1.2rem; }
+        .q-container { margin-top: 30px; }
+        .q-block { margin-bottom: 35px; border-bottom: 1px solid var(--light); padding-bottom: 20px; }
+        .q-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 15px; }
+        .opt-label { display: block; padding: 12px; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 8px; cursor: pointer; transition: 0.2s; }
+        .opt-label:hover { background: #f0f4f8; }
+        input[type="radio"] { margin-right: 12px; transform: scale(1.2); }
         
-        #results-summary {
-            text-align: center;
-            font-size: 1.5em;
-            margin-top: 20px;
-            font-weight: bold;
-            display: none;
-        }
-        #quiz-area { display: none; }
+        /* Wyniki */
+        .correct { background: #d4edda !important; border-color: #c3e6cb !important; color: #155724; font-weight: bold; }
+        .wrong { background: #f8d7da !important; border-color: #f5c6cb !important; color: #721c24; }
+        #score-board { display: none; font-size: 1.5rem; text-align: center; margin: 20px 0; padding: 20px; border-radius: 10px; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>Egzamin z Posługiwania się Bronią</h1>
-
-    <div class="controls">
-        <button class="btn-start" onclick="startTest()">Rozpocznij test</button>
-        <button class="btn-reset" onclick="startTest()">Zacznij od nowa</button>
+<div class="wrapper">
+    <h1>Podręcznikowy Test z Broni Palnej</h1>
+    
+    <div class="sticky-nav">
+        <button class="btn btn-start" onclick="initQuiz()">Rozpocznij test</button>
+        <button class="btn btn-reset" onclick="initQuiz()">Zacznij od nowa</button>
     </div>
 
-    <div id="quiz-area">
-        <div id="questions-container"></div>
-        <button class="btn-finish" id="finish-btn" onclick="finishTest()">Zakończ i sprawdź odpowiedzi</button>
-    </div>
-
-    <div id="results-summary"></div>
+    <div id="score-board"></div>
+    <div id="quiz-area" class="q-container"></div>
+    <button id="finish-btn" class="btn btn-check" style="display:none;" onclick="checkAnswers()">Zakończ i sprawdź odpowiedzi</button>
 </div>
 
 <script>
-    // Baza pytań na podstawie Twojego dokumentu
-    const questionsData = [
-        { q: "Energia początkowa pocisku (SMJ – pocisk pełno płaszczowy) naboju 9x19 mm Parabellum wynosi:", options: ["274÷348 J", "324÷412 J", "462÷584 J", "592÷612 J"], correct: "462÷584 J" },
-        { q: "Obrona konieczna to działanie wyłącznie w celu:", options: ["odparcia bezprawnego zamachu na dobro chronione prawem", "odparcia bezpośredniego, bezprawnego zamachu na jakiekolwiek dobro chronione prawem", "minimalizacji ekscesu intensywnego lub ekstensywnego sprawcy przestępstwa"], correct: "odparcia bezpośredniego, bezprawnego zamachu na jakiekolwiek dobro chronione prawem" },
-        { q: "Czy oddanie strzału ostrzegawczego jest użyciem broni palnej:", options: ["tak", "nie", "w niektórych przypadkach – może być"], correct: "nie" },
-        { q: "Objawem jakiego zacięcia nie jest jałowy ruch spustu:", options: ["niedomknięcia komory nabojowej", "przytrzaśnięcia łuski", "niewypału", "utknięcia naboju", "odpowiedzi b i d są prawidłowe"], correct: "niewypału" },
-        { q: "Nabój używany w pistolecie Glock 17 to:", options: ["38 Special WC", "9 mm x 17", "9 mm x 19 Para"], correct: "9 mm x 19 Para" },
-        { q: "Co oznacza termin „zaryglowana broń”:", options: ["broń nieprzeładowana w kaburze", "broń skierowana w stronę kulochwytu", "pocisk w lufie, wszystkie mechanizmy broni zamknięte, broń gotowa do strzału"], correct: "pocisk w lufie, wszystkie mechanizmy broni zamknięte, broń gotowa do strzału" },
-        { q: "Ile bezpieczników posiada pistolet Walther P99 DAO/Glock/XDM:", options: ["4", "3", "2", "żadna odpowiedź nie jest prawidłowa"], correct: "3" },
-        { q: "Linia celowania to:", options: ["linia prosta łącząca środek szczerbinki z wierzchołkiem muszki", "linia prosta przechodząca od oka strzelającego przez środek szczerbinki celownika równo z krawędziami szczerbiny i wierzchołkiem muszki do punktu celowania", "odległość od punktu wylotu do punktu przecięcia się toru pocisku z linią celowniczą", "żadna odpowiedź nie jest poprawna"], correct: "odległość od punktu wylotu do punktu przecięcia się toru pocisku z linią celowniczą" },
-        { q: "Moc obalająca broni zależy od:", options: ["prędkości pocisku w chwili uderzenia w cel", "energii pocisku w chwili uderzenia w cel", "odpowiedzi a i b są prawidłowe", "żadna odpowiedź nie jest poprawna"], correct: "energii pocisku w chwili uderzenia w cel" },
-        { q: "Zaznacz właściwą odpowiedź:", options: ["celować należy okiem dominującym, mając jednocześnie otwarte także drugie oko", "celować zawsze należy okiem dominującym, mając jednocześnie otwarte drugie oko, ale przed padnięciem strzału należy jedno zamknąć", "celować należy zawsze okiem dominującym, mając jednocześnie zamknięte także drugie oko"], correct: "celować należy zawsze okiem dominującym, mając jednocześnie zamknięte także drugie oko" },
-        { q: "Profil przewodu lufy w pistolecie Glock jest:", options: ["heksagonalny", "oktagonalny", "oksagonalny"], correct: "heksagonalny" },
-        { q: "Oko dominujące określane jest:", options: ["indywidualnie dla strzelającego", "przez instruktora", "za pomocą specjalnych przyrządów optycznych", "żadna odpowiedź nie jest prawidłowa"], correct: "przez instruktora" },
-        { q: "Podjęcie decyzji o użyciu broni zależy od:", options: ["oceny zagrożenia i od sytuacji prawnej", "rodzaju broni, w którą jest uzbrojony przeciwnik", "liczby przeciwników"], correct: "oceny zagrożenia i od sytuacji prawnej" },
-        { q: "Pistolet P-99/Glock jest bronią:", options: ["samopowtarzalną, działającą na zasadzie wykorzystania energii swobodnego odrzutu zamka", "kurkową, samopowtarzalną działającą na zasadzie wykorzystania energii krótkiego odrzutu lufy", "bezkurkową, samopowtarzalną, działającą na zasadzie wykorzystania energii krótkiego odrzutu lufy"], correct: "samopowtarzalną, działającą na zasadzie wykorzystania energii swobodnego odrzutu zamka" },
-        { q: "Pistolet P-99/Glock ryglowany jest przez:", options: ["przekoszenie lufy w płaszczyźnie pionowej", "bezwładnością zamka", "bezwładnością lufy"], correct: "bezwładnością lufy" },
-        { q: "Do najczęstszych przyczyn niewypału należy:", options: ["niesprawność wyrzutnika lub jego sprężyny", "niesprawna spłonka naboju", "użycie amunicji z wadliwym ładunkiem prochowym"], correct: "niesprawność wyrzutnika lub jego sprężyny" },
-        { q: "Podczas wymiany magazynka należy zawsze:", options: ["przyjąć postawę klęczącą niską", "dokonać wymiany wykorzystując do tego osłonę", "patrzeć w kierunku zagrożenia", "przyjąć postawę strzelecką – gotowości"], correct: "dokonać wymiany wykorzystując do tego osłonę" },
-        { q: "Do zacięć występujących najczęściej w trakcie strzelania z pistoletu należą:", options: ["niedomknięcie komory zamkowej, urwanie pazura wyciągu, zakleszczenie się podajnika w pudełku magazynka", "uszkodzenie zatrzasku magazynka poprzez nieumiejętne jego ładowanie, wypadanie magazynka z chwytu", "niedomknięcie komory nabojowej, utknięcie naboju, przytrzaśnięcie łuski"], correct: "niedomknięcie komory nabojowej, utknięcie naboju, przytrzaśnięcie łuski" },
-        { q: "W celu odparcia bezpośredniego i bezprawnego zamachu na życie, zdrowie lub wolność funkcjonariusza, może on użyć broni palnej:", options: ["wobec każdej osoby", "tylko wobec osoby poczytalnej", "tylko wobec osoby, która ukończyła 17 rok życia"], correct: "tylko wobec osoby, która ukończyła 17 rok życia" },
-        { q: "Zacięcie broni to:", options: ["krótkotrwała niesprawność broni możliwa do usunięcia przez strzelającego na linii ognia podczas strzelania", "dłuższa niesprawność broni możliwa do usunięcia przez strzelającego na linii ognia podczas strzelania, lecz wymagająca większych umiejętności", "niesprawność broni uniemożliwiająca dalsze strzelanie, niemożliwa do usunięcia przez strzelającego"], correct: "krótkotrwała niesprawność broni możliwa do usunięcia przez strzelającego na linii ognia podczas strzelania" },
-        { q: "Balistyka dzieli się na:", options: ["wewnętrzną", "wewnętrzną, zewnętrzną i końcową", "końcową", "zewnętrzną"], correct: "wewnętrzną" },
-        { q: "Rodzaje zacięć w pistoletach:", options: ["komin", "niedomknięcie zamka", "odpowiedzi a i b są prawidłowe", "żadna odpowiedź nie jest prawidłowa"], correct: "niedomknięcie zamka" },
-        { q: "Jednym ze sposobów usuwania zacięcia – utknięcie naboju w komorze nabojowej jest:", options: ["minimalne cofnięcie zamka ręką wspomagającą...", "przeładowanie pistoletu z jednoczesnym ćwierć-obrotem", "wymiana iglicy", "uderzenie dłonią wspomagającą w tył zamka"], correct: "wymiana iglicy" },
-        { q: "Funkcjonariusz ma prawo użycia broni palnej wyłącznie przeciwko osobie, która:", options: ["usiłuje bezprawnie, przemocą odebrać broń palną funkcjonariuszowi lub innej osobie posiadającej broń palną", "usiłuje bezprawnie lub przemocą odebrać broń palną funkcjonariuszowi", "usiłuje bezprawnie odebrać broń palną uprawnionemu"], correct: "usiłuje bezprawnie, przemocą odebrać broń palną funkcjonariuszowi lub innej osobie posiadającej broń palną" },
-        { q: "Będąc na linii ognia broń należy kierować w stronę kulochwytu z wyjątkiem, gdy:", options: ["broń nie jest załadowana", "broń nie jest przeładowana", "bez żadnych wyjątków", "broń jest zabezpieczona"], correct: "bez żadnych wyjątków" },
-        { q: "Jakie czynności należy wykonać na komendę „ładuj broń”:", options: ["podłączyć magazynek i czekać na dalsze polecenia", "podłączyć magazynek do broni i czekać w postawie gotowości", "rozpocząć strzelanie", "żadna odpowiedź nie jest prawidłowa"], correct: "rozpocząć strzelanie" },
-        { q: "Nabój nie wszedł do komory nabojowej – podaj przyczynę zacięcia:", options: ["nieumiejętne przeładowanie pistoletu, słaba sprężyna powrotna, zabrudzona komora", "słaba sprężyna powrotna, uszkodzony wyrzutnik, słaba sprężyna magazynka", "zabrudzone prowadnice zamka, zbyt mocna sprężyna, ułamana iglica"], correct: "słaba sprężyna powrotna, uszkodzony wyrzutnik, słaba sprężyna magazynka" },
-        { q: "Zacięciem występującym podczas strzelania z pistoletów jest między innymi:", options: ["niedomknięcie komory nabojowej", "urwanie pazura wyciągu", "pęknięcie sprężyny powrotnej"], correct: "niedomknięcie komory nabojowej" },
-        { q: "Wykorzystanie broni służy do:", options: ["bezpośredniego pościgu za osobą, wobec której użycie broni jest dopuszczalne", "zaalarmowania lub wezwania pomocy", "żadna odpowiedź nie jest prawidłowa"], correct: "bezpośredniego pościgu za osobą, wobec której użycie broni jest dopuszczalne" },
-        { q: "Wymiana taktyczna magazynka polega na:", options: ["wymianie magazynka pustego na pełen w warunkach bojowych", "wymianie magazynka, gdy wzrok strzelającego skierowany jest w kierunku zagrożenia"], correct: "wymianie magazynka, gdy wzrok strzelającego skierowany jest w kierunku zagrożenia" },
-        { q: "Jaką postawę strzelecką w warunkach bojowych należy stosować?", options: ["tylko klęczącą niską", "leżącą na brzuchu", "półfrontalną obniżoną", "dostosować postawę strzelecką do panującej sytuacji"], correct: "półfrontalną obniżoną" },
-        { q: "Zasada działania pistoletów P99/PPS/Glock/XDM oparta jest na:", options: ["odrzucie zamka półswobodnego", "wykorzystania krótkiego odrzutu lufy", "odrzucie zamka swobodnego", "żadna z podanych odpowiedzi"], correct: "żadna z podanych odpowiedzi" },
-        { q: "Jakie czynności należy wykonać po zakończeniu strzelania:", options: ["zdjąć palec z języka spustowego i trzymać broń w stronę bezpieczną", "zwolnić zamek, wykonać strzał kontrolny i schować broń do kabury", "odłączyć magazynek, zwolnić zamek i schować broń do kabury"], correct: "zwolnić zamek, wykonać strzał kontrolny i schować broń do kabury" }
+    // Baza danych na podstawie dokumentu PDF i klucza obrazkowego
+    const quizData = [
+        { q: "1. Energia początkowa pocisku (SMJ – pocisk pełno płaszczowy) naboju 9x19 mm Parabellum wynosi:", options: ["274÷348 J", "324÷412 J", "462÷584 J", "592÷612 J"], correct: "462÷584 J" },
+        { q: "2. Obrona konieczna to działanie wyłącznie w celu:", options: ["odparcia bezprawnego zamachu na dobro chronione prawem", "odparcia bezpośredniego, bezprawnego zamachu na jakiekolwiek dobro chronione prawem", "minimalizacji ekscesu intensywnego lub ekstensywnego sprawcy przestępstwa"], correct: "odparcia bezpośredniego, bezprawnego zamachu na jakiekolwiek dobro chronione prawem" },
+        { q: "3. Czy oddanie strzału ostrzegawczego jest użyciem broni palnej:", options: ["tak", "nie", "w niektórych przypadkach – może być"], correct: "nie" },
+        { q: "4. Objawem jakiego zacięcia nie jest jałowy ruch spustu:", options: ["niedomknięcia komory nabojowej", "przytrzaśnięcia łuski", "niewypału", "utknięcia naboju", "odpowiedzi b i d są prawidłowe"], correct: "niewypału" },
+        { q: "5. Nabój używany w pistolecie Glock 17 to:", options: ["38 Special WC", "9 mm x 17", "9 mm x 19 Para"], correct: "9 mm x 19 Para" },
+        { q: "6. Co oznacza termin „zaryglowana broń”:", options: ["broń nieprzeładowana w kaburze", "broń skierowana w stronę kulochwytu", "pocisk w lufie, wszystkie mechanizmy broni zamknięte, broń gotowa do strzału"], correct: "pocisk w lufie, wszystkie mechanizmy broni zamknięte, broń gotowa do strzału" },
+        { q: "7. Ile bezpieczników posiada pistolet Walther P99 DAO/Glock/XDM:", options: ["4", "3", "2", "żadna odpowiedź nie jest prawidłowa"], correct: "3" },
+        { q: "8. Uczestnik strzelania ma obowiązek:", options: ["sprawdzić poprawność zamocowania tarcz przed strzelaniem", "stale kontrolować położenie broni w trakcie strzelania", "stale trzymać palec na języku spustowym", "wszystkie odpowiedzi są prawidłowe"], correct: "stale kontrolować położenie broni w trakcie strzelania" },
+        { q: "9. Co ma kluczowe znaczenie na celność strzelania:", options: ["właściwe zgrywanie przyrządów celowniczych", "określona postawa strzelecka", "nadanie osi przewodu lufy określonego położenia w płaszczyźnie poziomej i pionowej", "wszystkie powyższe"], correct: "nadanie osi przewodu lufy określonego położenia w płaszczyźnie poziomej i pionowej" },
+        { q: "10. Strzał to:", options: ["wyrzucenie pocisku z przewodu lufy spowodowane działaniem ciśnienia gazów prochowych", "działanie ciśnienia gazów prochowych na dno łuski", "naciśnięcie na język spustowy", "odpowiedzi a, b i c są prawidłowe"], correct: "wyrzucenie pocisku z przewodu lufy spowodowane działaniem ciśnienia gazów prochowych" },
+        { q: "11. Prędkość wylotowa pocisku z broni P-99 wynosi:", options: ["260 m/s", "360 m/s", "820 m/s", "żadna z powyższych"], correct: "360 m/s" },
+        { q: "12. Zasadnicze elementy broni to:", options: ["lufa, zamek, kabura, magazynek", "zamek, lufa, szkielet, magazynek, wycior", "zamek, lufa, sprężyna powrotna, szkielet broni z mechanizmem spustowym"], correct: "zamek, lufa, sprężyna powrotna, szkielet broni z mechanizmem spustowym" },
+        { q: "13. Awaria broni to:", options: ["krótkotrwała niesprawność broni możliwa do usunięcia na linii ognia", "dłuższa niesprawność broni wymagająca wyciora", "niesprawność broni uniemożliwiająca dalsze strzelanie, wymagająca rusznikarza"], correct: "niesprawność broni uniemożliwiająca dalsze strzelanie, wymagająca rusznikarza" },
+        { q: "14. Prędkość początkowa zależy od:", options: ["długości lufy", "masy ładunku prochowego", "odpowiedzi a i b są prawidłowe", "żadna odpowiedź nie jest prawidłowa"], correct: "odpowiedzi a i b są prawidłowe" },
+        { q: "15. Linia celowania to:", options: ["linia prosta łącząca środek szczerbinki z wierzchołkiem muszki", "linia prosta przechodząca od oka strzelającego przez przyrządy do punktu celowania", "odległość od punktu wylotu do punktu przecięcia się toru pocisku", "żadna odpowiedź nie jest poprawna"], correct: "linia prosta przechodząca od oka strzelającego przez przyrządy do punktu celowania" },
+        { q: "16. Moc obalająca broni zależy od:", options: ["prędkości pocisku w chwili uderzenia w cel", "energii pocisku w chwili uderzenia w cel", "odpowiedzi a i b są prawidłowe", "żadna odpowiedź nie jest poprawna"], correct: "odpowiedzi a i b są prawidłowe" },
+        { q: "17. Zaznacz właściwą odpowiedź (celowanie):", options: ["celować należy okiem dominującym, mając jednocześnie otwarte także drugie oko", "celować zawsze okiem dominującym, ale przed strzałem drugie zamknąć", "celować należy zawsze okiem dominującym, mając zamknięte drugie oko"], correct: "celować należy okiem dominującym, mając jednocześnie otwarte także drugie oko" },
+        { q: "18. Profil przewodu lufy w pistolecie Glock jest:", options: ["hektagonalny", "heksagonalny", "oktagonalny", "oksagonalny"], correct: "heksagonalny" },
+        { q: "19. Oko dominujące określane jest:", options: ["indywidualnie dla strzelającego", "przez instruktora", "za pomocą specjalnych przyrządów optycznych", "żadna odpowiedź nie jest prawidłowa"], correct: "indywidualnie dla strzelającego" },
+        { q: "20. Podjęcie decyzji o użyciu broni zależy od:", options: ["oceny zagrożenia i od sytuacji prawnej", "rodzaju broni przeciwnika", "liczby przeciwników"], correct: "oceny zagrożenia i od sytuacji prawnej" },
+        { q: "21. Pistolet P-99/Glock jest bronią:", options: ["samopowtarzalną, energia swobodnego odrzutu zamka", "kurkową, krótki odrzut lufy", "bezkurkową, samopowtarzalną, działającą na zasadzie wykorzystania energii krótkiego odrzutu lufy"], correct: "bezkurkową, samopowtarzalną, działającą na zasadzie wykorzystania energii krótkiego odrzutu lufy" },
+        { q: "22. Pistolet P-99/Glock ryglowany jest przez:", options: ["przekoszenie lufy w płaszczyźnie pionowej", "bezwładnością zamka", "bezwładnością lufy"], correct: "przekoszenie lufy w płaszczyźnie pionowej" },
+        { q: "23. Do najczęstszych przyczyn niewypału należy:", options: ["niesprawność wyrzutnika lub jego sprężyny", "niesprawna spłonka naboju", "użycie amunicji z wadliwym ładunkiem prochowym"], correct: "niesprawna spłonka naboju" },
+        { q: "24. Podczas wymiany magazynka należy zawsze:", options: ["przyjąć postawę klęczącą niską", "dokonać wymiany wykorzystując do tego osłonę", "patrzeć w kierunku zagrożenia", "przyjąć postawę strzelecką – gotowości"], correct: "patrzeć w kierunku zagrożenia" },
+        { q: "25. Do zacięć występujących najczęściej w trakcie strzelania należą:", options: ["niedomknięcie komory zamkowej, urwanie pazura", "uszkodzenie zatrzasku magazynka", "niedomknięcie komory nabojowej, utknięcie naboju, przytrzaśnięcie łuski"], correct: "niedomknięcie komory nabojowej, utknięcie naboju, przytrzaśnięcie łuski" },
+        { q: "26. W celu odparcia zamachu na życie funkcjonariusza, może on użyć broni palnej:", options: ["wobec każdej osoby", "tylko wobec osoby poczytalnej", "tylko wobec osoby powyżej 17 roku życia"], correct: "wobec każdej osoby" },
+        { q: "27. Zacięcie broni to:", options: ["krótkotrwała niesprawność broni możliwa do usunięcia na linii ognia", "dłuższa niesprawność wymagająca wyciora", "niesprawność niemożliwa do usunięcia na linii ognia"], correct: "krótkotrwała niesprawność broni możliwa do usunięcia na linii ognia" },
+        { q: "28. Balistyka dzieli się na:", options: ["wewnętrzną", "wewnętrzną, zewnętrzną i końcową", "końcową", "zewnętrzną"], correct: "wewnętrzną, zewnętrzną i końcową" },
+        { q: "29. Rodzaje zacięć w pistoletach:", options: ["komin", "niedomknięcie zamka", "odpowiedzi a i b są prawidłowe", "żadna odpowiedź nie jest prawidłowa"], correct: "odpowiedzi a i b są prawidłowe" },
+        { q: "30. Jednym ze sposobów usuwania zacięcia – utknięcie naboju w komorze jest:", options: ["minimalne cofnięcie zamka ręką wspomagającą i pchnięcie go do przodu", "przeładowanie z ćwierć-obrotem", "wymiana iglicy", "uderzenie dłonią w tył zamka"], correct: "minimalne cofnięcie zamka ręką wspomagającą i pchnięcie go do przodu" },
+        { q: "31. Funkcjonariusz ma prawo użycia broni palnej przeciwko osobie, która:", options: ["usiłuje przemocą odebrać broń funkcjonariuszowi", "usiłuje bezprawnie odebrać broń innemu funkcjonariuszowi", "usiłuje bezprawnie odebrać broń palną uprawnionemu lub innej osobie uprawnionej do jej posiadania"], correct: "usiłuje bezprawnie odebrać broń palną uprawnionemu lub innej osobie uprawnionej do jej posiadania" },
+        { q: "32. Będąc na linii ognia broń należy kierować w stronę kulochwytu:", options: ["gdy broń nie jest załadowana", "gdy broń nie jest przeładowana", "bez żadnych wyjątków", "gdy broń jest zabezpieczona"], correct: "bez żadnych wyjątków" },
+        { q: "33. Jakie czynności należy wykonać na komendę „ładuj broń”:", options: ["podłączyć magazynek i czekać na polecenia", "podłączyć magazynek i czekać w postawie gotowości", "rozpocząć strzelanie", "żadna z powyższych"], correct: "podłączyć magazynek i czekać w postawie gotowości" },
+        { q: "34. Nabój nie wszedł do komory nabojowej – przyczyna:", options: ["nieumiejętne przeładowanie, słaba sprężyna, zabrudzona komora", "uszkodzony wyrzutnik", "ułamana iglica"], correct: "nieumiejętne przeładowanie, słaba sprężyna, zabrudzona komora" },
+        { q: "35. Zacięciem występującym podczas strzelania jest:", options: ["niedomknięcie komory nabojowej", "urwanie pazura wyciągu", "pęknięcie sprężyny powrotnej"], correct: "niedomknięcie komory nabojowej" },
+        { q: "36. Wykorzystanie broni służy do:", options: ["bezpośredniego pościgu", "zaalarmowania lub wezwania pomocy", "żadna odpowiedź nie jest prawidłowa"], correct: "zaalarmowania lub wezwania pomocy" },
+        { q: "37. Wymiana taktyczna magazynka polega na:", options: ["wymianie magazynka pustego na pełen", "wymianie gdy wzrok jest na celu", "wymianie gdy przerwa, nabój w komorze, broń i wzrok na zagrożenie"], correct: "wymianie gdy przerwa, nabój w komorze, broń i wzrok na zagrożenie" },
+        { q: "38. Jaką postawę strzelecką w warunkach bojowych należy stosować?", options: ["tylko klęczącą niską", "leżącą", "półfrontalną obniżoną", "dostosować postawę strzelecką do panującej sytuacji"], correct: "dostosować postawę strzelecką do panującej sytuacji" },
+        { q: "39. Zasada działania pistoletów P99/PPS/Glock/XDM oparta jest na:", options: ["odrzucie zamka półswobodnego", "wykorzystaniu krótkiego odrzutu lufy", "odrzucie zamka swobodnego", "żadna z podanych"], correct: "wykorzystaniu krótkiego odrzutu lufy" },
+        { q: "40. Jakie czynności należy wykonać po zakończeniu strzelania:", options: ["zdjąć palec ze spustu, trzymać bezpiecznie i czekać na polecenia", "zwolnić zamek i schować broń", "odłączyć magazynek i schować"], correct: "zdjąć palec ze spustu, trzymać bezpiecznie i czekać na polecenia" }
     ];
 
-    function shuffle(array) {
+    function shuffleArray(array) {
         for (let i = array.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [array[i], array[j]] = [array[j], array[i]];
         }
-        return array;
     }
 
-    function startTest() {
-        document.getElementById('results-summary').style.display = 'none';
-        document.getElementById('quiz-area').style.display = 'block';
-        const container = document.getElementById('questions-container');
-        container.innerHTML = '';
+    function initQuiz() {
+        const quizArea = document.getElementById('quiz-area');
+        const finishBtn = document.getElementById('finish-btn');
+        const board = document.getElementById('score-board');
+        
+        quizArea.innerHTML = '';
+        board.style.display = 'none';
+        finishBtn.style.display = 'block';
 
-        // Losowanie pytań
-        const shuffledQuestions = shuffle([...questionsData]);
+        quizData.forEach((item, index) => {
+            const qBlock = document.createElement('div');
+            qBlock.className = 'q-block';
+            qBlock.id = `q-block-${index}`;
+            
+            const qTitle = document.createElement('div');
+            qTitle.className = 'q-title';
+            qTitle.innerText = item.q;
+            qBlock.appendChild(qTitle);
 
-        shuffledQuestions.forEach((item, index) => {
-            const qDiv = document.createElement('div');
-            qDiv.className = 'question-block';
-            qDiv.dataset.correct = item.correct;
+            // Losowanie kolejności odpowiedzi
+            let currentOptions = [...item.options];
+            shuffleArray(currentOptions);
 
-            const qText = document.createElement('div');
-            qText.className = 'question-text';
-            qText.innerText = item.q;
-            qDiv.appendChild(qText);
-
-            // Losowanie odpowiedzi
-            const shuffledOptions = shuffle([...item.options]);
-
-            shuffledOptions.forEach(opt => {
+            currentOptions.forEach(optText => {
                 const label = document.createElement('label');
-                label.className = 'option';
+                label.className = 'opt-label';
                 
                 const radio = document.createElement('input');
                 radio.type = 'radio';
-                radio.name = 'q' + index;
-                radio.value = opt;
-
+                radio.name = `question-${index}`;
+                radio.value = optText;
+                
                 label.appendChild(radio);
-                label.append(opt);
-                qDiv.appendChild(label);
+                label.append(optText);
+                qBlock.appendChild(label);
             });
 
-            container.appendChild(qDiv);
+            quizArea.appendChild(qBlock);
         });
-        
         window.scrollTo(0, 0);
     }
 
-    function finishTest() {
-        const blocks = document.querySelectorAll('.question-block');
+    function checkAnswers() {
         let score = 0;
+        quizData.forEach((item, index) => {
+            const qBlock = document.getElementById(`q-block-${index}`);
+            const selected = qBlock.querySelector(`input[name="question-${index}"]:checked`);
+            const allLabels = qBlock.querySelectorAll('.opt-label');
 
-        blocks.forEach(block => {
-            const correctValue = block.dataset.correct;
-            const options = block.querySelectorAll('.option');
-            const selectedRadio = block.querySelector('input[type="radio"]:checked');
-            const selectedValue = selectedRadio ? selectedRadio.value : null;
+            allLabels.forEach(label => {
+                const radio = label.querySelector('input');
+                label.classList.remove('correct', 'wrong');
 
-            if (selectedValue === correctValue) {
-                score++;
-            }
+                // Podświetlenie poprawnej odpowiedzi na zielono
+                if (radio.value === item.correct) {
+                    label.classList.add('correct');
+                }
 
-            options.forEach(optLabel => {
-                const radio = optLabel.querySelector('input');
-                const val = radio.value;
-
-                // Reset klas
-                optLabel.classList.remove('correct', 'wrong');
-
-                if (val === correctValue) {
-                    optLabel.classList.add('correct');
-                } else if (selectedValue === val && val !== correctValue) {
-                    optLabel.classList.add('wrong');
+                // Podświetlenie błędnej odpowiedzi użytkownika na czerwono
+                if (selected && selected.value !== item.correct && radio.checked) {
+                    label.classList.add('wrong');
                 }
             });
+
+            if (selected && selected.value === item.correct) {
+                score++;
+            }
         });
 
-        const summary = document.getElementById('results-summary');
-        summary.style.display = 'block';
-        summary.innerHTML = `Twój wynik: ${score} / ${questionsData.length}`;
-        window.scrollTo(0, document.body.scrollHeight);
+        const board = document.getElementById('score-board');
+        board.style.display = 'block';
+        board.innerHTML = `Twój wynik: <strong>${score} / ${quizData.length}</strong>`;
+        board.style.background = score === quizData.length ? '#d4edda' : '#fff3cd';
+        
+        window.scrollTo(0, 0);
     }
 </script>
-
 </body>
 </html>
