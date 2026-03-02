@@ -2,377 +2,234 @@
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
-    <title>Quiz – środki przymusu bezpośredniego</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Wiedzy o Broni Palnej</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            max-width: 900px;
-            margin: 20px auto;
-            padding: 0 10px;
-            line-height: 1.5;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
         }
-
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
         h1 {
             text-align: center;
-            margin-bottom: 20px;
+            color: #2c3e50;
+            margin-bottom: 30px;
         }
-
-        .question {
-            border: 1px solid #ccc;
-            padding: 12px 15px;
-            margin-bottom: 12px;
+        .controls {
+            text-align: center;
+            margin-bottom: 30px;
+            position: sticky;
+            top: 0;
+            background: #fff;
+            padding: 10px 0;
+            z-index: 100;
+            border-bottom: 1px solid #eee;
+        }
+        button {
+            padding: 12px 25px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
             border-radius: 6px;
+            transition: background 0.3s;
+            margin: 5px;
         }
+        .btn-start { background-color: #27ae60; color: white; }
+        .btn-start:hover { background-color: #219150; }
+        .btn-reset { background-color: #e67e22; color: white; }
+        .btn-reset:hover { background-color: #d35400; }
+        .btn-finish { background-color: #2980b9; color: white; display: block; width: 100%; margin-top: 30px; }
+        .btn-finish:hover { background-color: #2471a3; }
 
+        .question-block {
+            margin-bottom: 25px;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+        }
         .question-text {
             font-weight: bold;
-            margin-bottom: 8px;
+            margin-bottom: 15px;
+            font-size: 1.1em;
         }
-
-        .options label {
+        .option {
             display: block;
-            margin: 3px 0;
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
             cursor: pointer;
+            transition: background 0.2s;
         }
+        .option:hover { background-color: #f9f9f9; }
+        input[type="radio"] { margin-right: 10px; }
 
-        .correct {
-            background-color: #d4edda;
-        }
-
-        .incorrect {
-            background-color: #f8d7da;
-        }
-
-        .unanswered {
-            background-color: #fff3cd;
-        }
-
-        .correct-answer {
-            font-weight: bold;
-            text-decoration: underline;
-        }
-
-        .bad {
-            text-decoration: line-through;
-        }
-
-        .buttons {
+        /* Klasy po zakończeniu testu */
+        .correct { background-color: #d4edda !important; border-color: #28a745 !important; color: #155724; font-weight: bold; }
+        .wrong { background-color: #f8d7da !important; border-color: #dc3545 !important; color: #721c24; }
+        
+        #results-summary {
+            text-align: center;
+            font-size: 1.5em;
             margin-top: 20px;
-            text-align: center;
-        }
-
-        .buttons button {
-            margin: 0 10px;
-            padding: 8px 16px;
-            font-size: 14px;
-            cursor: pointer;
-        }
-
-        #score {
-            margin-top: 15px;
-            text-align: center;
             font-weight: bold;
+            display: none;
         }
+        #quiz-area { display: none; }
     </style>
 </head>
 <body>
-<h1>Quiz – środki przymusu bezpośredniego</h1>
 
-<div id="quiz"></div>
+<div class="container">
+    <h1>Egzamin z Posługiwania się Bronią</h1>
 
-<div class="buttons">
-    <button id="checkBtn" onclick="checkAnswers()">Sprawdź odpowiedzi</button>
-    <button id="resetBtn" onclick="resetQuiz()">Rozwiąż ponownie</button>
+    <div class="controls">
+        <button class="btn-start" onclick="startTest()">Rozpocznij test</button>
+        <button class="btn-reset" onclick="startTest()">Zacznij od nowa</button>
+    </div>
+
+    <div id="quiz-area">
+        <div id="questions-container"></div>
+        <button class="btn-finish" id="finish-btn" onclick="finishTest()">Zakończ i sprawdź odpowiedzi</button>
+    </div>
+
+    <div id="results-summary"></div>
 </div>
 
-<div id="score"></div>
-
 <script>
+    // Baza pytań na podstawie Twojego dokumentu
     const questionsData = [
-        {
-            text: "Do środków przymusu bezpośredniego należą:",
-            options: {
-                A: "Pociski niepenetracyjne, pies służbowy, kajdanki",
-                B: "Pałka służbowa, chemiczne środki obezwładniające w postaci ręcznych miotaczy substancji obezwładniających, pojazdy służbowe",
-                C: "Obie odpowiedzi prawidłowe"
-            },
-            correct: "C"
-        },
-        {
-            text: "Przez użycie środka przymusu bezpośredniego należy rozumieć:",
-            options: {
-                A: "Zastosowanie środka przymusu bezpośredniego w celu unieruchomienia pojazdu",
-                B: "Zastosowanie środka przymusu bezpośredniego wobec osoby",
-                C: "Zastosowanie środka przymusu bezpośredniego wobec osoby i zwierzęcia"
-            },
-            correct: "B"
-        },
-        {
-            text: "Jakie ŚPB może wykorzystać funkcjonariusz SCS wobec zwierzęcia, którego zachowanie zagraża bezpośrednio życiu lub zdrowiu uprawnionego lub innej osoby?",
-            options: {
-                A: "Pociski niepenetracyjne, chemiczne środki obezwładniające w postaci ręcznych miotaczy substancji obezwładniających",
-                B: "Przedmioty przeznaczone do obezwładniania osób za pomocą energii elektrycznej lub pałka służbowa",
-                C: "Obie odpowiedzi są prawidłowe"
-            },
-            correct: "C"
-        },
-        {
-            text: "W przypadku gdy pozwalają na to okoliczności zdarzenia uprawniony może użyć jednocześnie więcej niż jeden środek przymusu bezpośredniego lub wykorzystać jednocześnie więcej niż jeden taki środek, na zasadach określonych w ustawie. To jest:",
-            options: {
-                A: "Kajdanki założone na ręce trzymane z tyłu oraz przedmioty przeznaczone do obezwładniania osób za pomocą energii elektrycznej",
-                B: "Kajdanki założone na ręce, a następnie pałka służbowa w celu dźwigni transportowej",
-                C: "Obie odpowiedzi są prawidłowe"
-            },
-            correct: "B"
-        },
-        {
-            text: "Do środków przymusu bezpośredniego nie należy:",
-            options: {
-                A: "Siła fizyczna",
-                B: "Kajdanki i pies służbowy",
-                C: "Broń palna"
-            },
-            correct: "C"
-        },
-        {
-            text: "Za wyjątkiem sytuacji, w których zachodzi konieczność odparcia zamachu stwarzającego bezpośrednie zagrożenie życia lub zdrowia uprawnionego lub innej osoby:",
-            options: {
-                A: "Pałką służbową nie zadaje się uderzeń i pchnięć w głowę, szyję, brzuch",
-                B: "Nieumięśnione oraz szczególnie wrażliwe części ciała",
-                C: "Obie odpowiedzi są prawidłowe"
-            },
-            correct: "C"
-        },
-        {
-            text: "Chemiczne środki obezwładniające w postaci ręcznych miotaczy substancji obezwładniających można używać, jeśli jest cel:",
-            options: {
-                A: "Krótkotrwałego, odwracalnego pozbawienia wzroku",
-                B: "Zadanie przeciwnikowi krótkotrwałego, odwracalnego bólu",
-                C: "Krótkotrwałego zakłócenia orientacji przestrzennej lub obezwładnienia"
-            },
-            correct: "C"
-        },
-        {
-            text: "Gdzie uprawniony dokumentuje użycie lub wykorzystanie środka przymusu bezpośredniego?",
-            options: {
-                A: "Uprawniony dokumentuje w notatce użycie lub wykorzystanie środka przymusu bezpośredniego",
-                B: "W określonych okolicznościach może dokumentować w notatniku służbowym",
-                C: "Obie odpowiedzi są prawidłowe"
-            },
-            correct: "C"
-        },
-        {
-            text: "Wykorzystanie kolczatki drogowej. W czasie zatrzymania pojazdu, trzeba wstrzymać ruch w obu kierunkach w odległości:",
-            options: {
-                A: "150 m",
-                B: "100 m",
-                C: "200 m"
-            },
-            correct: "B"
-        },
-        {
-            text: "Przedmioty przeznaczone do obezwładniania osób za pomocą energii elektrycznej można użyć:",
-            options: {
-                A: "W stosunku do osób oraz zwierząt",
-                B: "Do zatrzymania osoby, udaremnienia jej ucieczki lub pościgu za tą osobą",
-                C: "Obie odpowiedzi są prawidłowe"
-            },
-            correct: "B"
-        },
-        {
-            text: "Kto decyduje o prewencyjnym użyciu kajdanek przez funkcjonariuszy SCS?",
-            options: {
-                A: "Bezpośredni przełożony",
-                B: "Osoba dowodząca podczas czynności",
-                C: "Funkcjonariusz"
-            },
-            correct: "C"
-        },
-        {
-            text: "Chemicznych środów obezwładniających w postaci ręcznych miotaczy substancji obezwładniających funkcjonariusz może użyć w przypadku:",
-            options: {
-                A: "Ujęcia osoby, udaremnienia jej ucieczki lub pościgu za tą osobą oraz przeciwdziałania niszczeniu mienia",
-                B: "Zatrzymania osoby, udaremnienia jej ucieczki lub pościgu za tą osobą",
-                C: "Obie odpowiedzi są prawidłowe"
-            },
-            correct: "C"
-        },
-        {
-            text: "Uprawniony nie może odstąpić od zapewnienia i udzielenia medycznych czynności ratunkowych:",
-            options: {
-                A: "Osobie poszkodowanej w wypadku drogowym",
-                B: "Osobie poszkodowanej w zdarzeniu losowym",
-                C: "Kobiecie ciężarnej, wobec której użyto środka przymusu bezpośredniego"
-            },
-            correct: "C"
-        },
-        {
-            text: "Przedmiotów przeznaczonych do obezwładniania osób za pomocą energii elektrycznej używa się w celu:",
-            options: {
-                A: "Krótkotrwałego obezwładnienia osoby lub zwierzęcia",
-                B: "Zapewnienia sobie oraz osobom postronnym bezpieczeństwa podczas zakładania kajdanek",
-                C: "Krótkotrwałego obezwładnienia osoby"
-            },
-            correct: "C"
-        },
-        {
-            text: "Kolczatki drogowej nie wykorzystuje się w celu zatrzymania pojazdu:",
-            options: {
-                A: "Jednośladowego",
-                B: "Osobowego",
-                C: "Ciężarowego"
-            },
-            correct: "A"
-        },
-        {
-            text: "Do środków pirotechnicznych o właściwościach ogłuszających lub olśniewających zalicza się w szczególności:",
-            options: {
-                A: "Granaty hukowo-błyskowe",
-                B: "Granaty dymne oraz petardy",
-                C: "Obie odpowiedzi są prawidłowe"
-            },
-            correct: "C"
-        },
-        {
-            text: "Wykorzystanie środka przymusu bezpośredniego to:",
-            options: {
-                A: "Zastosowanie środka przymusu bezpośredniego wobec osoby albo zastosowanie w celu zatrzymania, zablokowania lub unieruchomienia pojazdu",
-                B: "Zastosowanie środka przymusu bezpośredniego wobec zwierzęcia oraz osoby albo zastosowanie go w celu zatrzymania, zablokowania lub unieruchomienia pojazdu",
-                C: "Zastosowanie środka przymusu bezpośredniego wobec zwierzęcia albo zastosowanie go w celu zatrzymania, zablokowania lub unieruchomienia pojazdu"
-            },
-            correct: "C"
-        },
-        {
-            text: "Jakiego ŚPB można użyć podczas stawiania biernego oporu?",
-            options: {
-                A: "Siła fizyczna, pociski niepenetracyjne",
-                B: "Siatka obezwładniająca",
-                C: "Siła fizyczna oraz chemiczne środki obezwładniające"
-            },
-            correct: "C"
-        },
-        {
-            text: "Wobec kobiet w ciąży, osób, których wygląd wskazuje na wiek do 13 lat lub osób o widocznej niepełnosprawności, uprawniony może użyć wyłącznie:",
-            options: {
-                A: "Siła fizyczna w postaci technik transportowych",
-                B: "Siła fizyczna w postaci technik obrony",
-                C: "Siła fizyczna w postaci technik obezwładnienia"
-            },
-            correct: "C"
-        },
-        {
-            text: "Na użycie lub wykorzystanie środków przymusu bezpośredniego przysługuje zażalenie do:",
-            options: {
-                A: "Prokuratury właściwej dla miejscowości",
-                B: "Naczelnika UCS",
-                C: "Funkcjonariusza"
-            },
-            correct: "A"
-        }
+        { q: "Energia początkowa pocisku (SMJ – pocisk pełno płaszczowy) naboju 9x19 mm Parabellum wynosi:", options: ["274÷348 J", "324÷412 J", "462÷584 J", "592÷612 J"], correct: "462÷584 J" },
+        { q: "Obrona konieczna to działanie wyłącznie w celu:", options: ["odparcia bezprawnego zamachu na dobro chronione prawem", "odparcia bezpośredniego, bezprawnego zamachu na jakiekolwiek dobro chronione prawem", "minimalizacji ekscesu intensywnego lub ekstensywnego sprawcy przestępstwa"], correct: "odparcia bezpośredniego, bezprawnego zamachu na jakiekolwiek dobro chronione prawem" },
+        { q: "Czy oddanie strzału ostrzegawczego jest użyciem broni palnej:", options: ["tak", "nie", "w niektórych przypadkach – może być"], correct: "nie" },
+        { q: "Objawem jakiego zacięcia nie jest jałowy ruch spustu:", options: ["niedomknięcia komory nabojowej", "przytrzaśnięcia łuski", "niewypału", "utknięcia naboju", "odpowiedzi b i d są prawidłowe"], correct: "niewypału" },
+        { q: "Nabój używany w pistolecie Glock 17 to:", options: ["38 Special WC", "9 mm x 17", "9 mm x 19 Para"], correct: "9 mm x 19 Para" },
+        { q: "Co oznacza termin „zaryglowana broń”:", options: ["broń nieprzeładowana w kaburze", "broń skierowana w stronę kulochwytu", "pocisk w lufie, wszystkie mechanizmy broni zamknięte, broń gotowa do strzału"], correct: "pocisk w lufie, wszystkie mechanizmy broni zamknięte, broń gotowa do strzału" },
+        { q: "Ile bezpieczników posiada pistolet Walther P99 DAO/Glock/XDM:", options: ["4", "3", "2", "żadna odpowiedź nie jest prawidłowa"], correct: "3" },
+        { q: "Linia celowania to:", options: ["linia prosta łącząca środek szczerbinki z wierzchołkiem muszki", "linia prosta przechodząca od oka strzelającego przez środek szczerbinki celownika równo z krawędziami szczerbiny i wierzchołkiem muszki do punktu celowania", "odległość od punktu wylotu do punktu przecięcia się toru pocisku z linią celowniczą", "żadna odpowiedź nie jest poprawna"], correct: "odległość od punktu wylotu do punktu przecięcia się toru pocisku z linią celowniczą" },
+        { q: "Moc obalająca broni zależy od:", options: ["prędkości pocisku w chwili uderzenia w cel", "energii pocisku w chwili uderzenia w cel", "odpowiedzi a i b są prawidłowe", "żadna odpowiedź nie jest poprawna"], correct: "energii pocisku w chwili uderzenia w cel" },
+        { q: "Zaznacz właściwą odpowiedź:", options: ["celować należy okiem dominującym, mając jednocześnie otwarte także drugie oko", "celować zawsze należy okiem dominującym, mając jednocześnie otwarte drugie oko, ale przed padnięciem strzału należy jedno zamknąć", "celować należy zawsze okiem dominującym, mając jednocześnie zamknięte także drugie oko"], correct: "celować należy zawsze okiem dominującym, mając jednocześnie zamknięte także drugie oko" },
+        { q: "Profil przewodu lufy w pistolecie Glock jest:", options: ["heksagonalny", "oktagonalny", "oksagonalny"], correct: "heksagonalny" },
+        { q: "Oko dominujące określane jest:", options: ["indywidualnie dla strzelającego", "przez instruktora", "za pomocą specjalnych przyrządów optycznych", "żadna odpowiedź nie jest prawidłowa"], correct: "przez instruktora" },
+        { q: "Podjęcie decyzji o użyciu broni zależy od:", options: ["oceny zagrożenia i od sytuacji prawnej", "rodzaju broni, w którą jest uzbrojony przeciwnik", "liczby przeciwników"], correct: "oceny zagrożenia i od sytuacji prawnej" },
+        { q: "Pistolet P-99/Glock jest bronią:", options: ["samopowtarzalną, działającą na zasadzie wykorzystania energii swobodnego odrzutu zamka", "kurkową, samopowtarzalną działającą na zasadzie wykorzystania energii krótkiego odrzutu lufy", "bezkurkową, samopowtarzalną, działającą na zasadzie wykorzystania energii krótkiego odrzutu lufy"], correct: "samopowtarzalną, działającą na zasadzie wykorzystania energii swobodnego odrzutu zamka" },
+        { q: "Pistolet P-99/Glock ryglowany jest przez:", options: ["przekoszenie lufy w płaszczyźnie pionowej", "bezwładnością zamka", "bezwładnością lufy"], correct: "bezwładnością lufy" },
+        { q: "Do najczęstszych przyczyn niewypału należy:", options: ["niesprawność wyrzutnika lub jego sprężyny", "niesprawna spłonka naboju", "użycie amunicji z wadliwym ładunkiem prochowym"], correct: "niesprawność wyrzutnika lub jego sprężyny" },
+        { q: "Podczas wymiany magazynka należy zawsze:", options: ["przyjąć postawę klęczącą niską", "dokonać wymiany wykorzystując do tego osłonę", "patrzeć w kierunku zagrożenia", "przyjąć postawę strzelecką – gotowości"], correct: "dokonać wymiany wykorzystując do tego osłonę" },
+        { q: "Do zacięć występujących najczęściej w trakcie strzelania z pistoletu należą:", options: ["niedomknięcie komory zamkowej, urwanie pazura wyciągu, zakleszczenie się podajnika w pudełku magazynka", "uszkodzenie zatrzasku magazynka poprzez nieumiejętne jego ładowanie, wypadanie magazynka z chwytu", "niedomknięcie komory nabojowej, utknięcie naboju, przytrzaśnięcie łuski"], correct: "niedomknięcie komory nabojowej, utknięcie naboju, przytrzaśnięcie łuski" },
+        { q: "W celu odparcia bezpośredniego i bezprawnego zamachu na życie, zdrowie lub wolność funkcjonariusza, może on użyć broni palnej:", options: ["wobec każdej osoby", "tylko wobec osoby poczytalnej", "tylko wobec osoby, która ukończyła 17 rok życia"], correct: "tylko wobec osoby, która ukończyła 17 rok życia" },
+        { q: "Zacięcie broni to:", options: ["krótkotrwała niesprawność broni możliwa do usunięcia przez strzelającego na linii ognia podczas strzelania", "dłuższa niesprawność broni możliwa do usunięcia przez strzelającego na linii ognia podczas strzelania, lecz wymagająca większych umiejętności", "niesprawność broni uniemożliwiająca dalsze strzelanie, niemożliwa do usunięcia przez strzelającego"], correct: "krótkotrwała niesprawność broni możliwa do usunięcia przez strzelającego na linii ognia podczas strzelania" },
+        { q: "Balistyka dzieli się na:", options: ["wewnętrzną", "wewnętrzną, zewnętrzną i końcową", "końcową", "zewnętrzną"], correct: "wewnętrzną" },
+        { q: "Rodzaje zacięć w pistoletach:", options: ["komin", "niedomknięcie zamka", "odpowiedzi a i b są prawidłowe", "żadna odpowiedź nie jest prawidłowa"], correct: "niedomknięcie zamka" },
+        { q: "Jednym ze sposobów usuwania zacięcia – utknięcie naboju w komorze nabojowej jest:", options: ["minimalne cofnięcie zamka ręką wspomagającą...", "przeładowanie pistoletu z jednoczesnym ćwierć-obrotem", "wymiana iglicy", "uderzenie dłonią wspomagającą w tył zamka"], correct: "wymiana iglicy" },
+        { q: "Funkcjonariusz ma prawo użycia broni palnej wyłącznie przeciwko osobie, która:", options: ["usiłuje bezprawnie, przemocą odebrać broń palną funkcjonariuszowi lub innej osobie posiadającej broń palną", "usiłuje bezprawnie lub przemocą odebrać broń palną funkcjonariuszowi", "usiłuje bezprawnie odebrać broń palną uprawnionemu"], correct: "usiłuje bezprawnie, przemocą odebrać broń palną funkcjonariuszowi lub innej osobie posiadającej broń palną" },
+        { q: "Będąc na linii ognia broń należy kierować w stronę kulochwytu z wyjątkiem, gdy:", options: ["broń nie jest załadowana", "broń nie jest przeładowana", "bez żadnych wyjątków", "broń jest zabezpieczona"], correct: "bez żadnych wyjątków" },
+        { q: "Jakie czynności należy wykonać na komendę „ładuj broń”:", options: ["podłączyć magazynek i czekać na dalsze polecenia", "podłączyć magazynek do broni i czekać w postawie gotowości", "rozpocząć strzelanie", "żadna odpowiedź nie jest prawidłowa"], correct: "rozpocząć strzelanie" },
+        { q: "Nabój nie wszedł do komory nabojowej – podaj przyczynę zacięcia:", options: ["nieumiejętne przeładowanie pistoletu, słaba sprężyna powrotna, zabrudzona komora", "słaba sprężyna powrotna, uszkodzony wyrzutnik, słaba sprężyna magazynka", "zabrudzone prowadnice zamka, zbyt mocna sprężyna, ułamana iglica"], correct: "słaba sprężyna powrotna, uszkodzony wyrzutnik, słaba sprężyna magazynka" },
+        { q: "Zacięciem występującym podczas strzelania z pistoletów jest między innymi:", options: ["niedomknięcie komory nabojowej", "urwanie pazura wyciągu", "pęknięcie sprężyny powrotnej"], correct: "niedomknięcie komory nabojowej" },
+        { q: "Wykorzystanie broni służy do:", options: ["bezpośredniego pościgu za osobą, wobec której użycie broni jest dopuszczalne", "zaalarmowania lub wezwania pomocy", "żadna odpowiedź nie jest prawidłowa"], correct: "bezpośredniego pościgu za osobą, wobec której użycie broni jest dopuszczalne" },
+        { q: "Wymiana taktyczna magazynka polega na:", options: ["wymianie magazynka pustego na pełen w warunkach bojowych", "wymianie magazynka, gdy wzrok strzelającego skierowany jest w kierunku zagrożenia"], correct: "wymianie magazynka, gdy wzrok strzelającego skierowany jest w kierunku zagrożenia" },
+        { q: "Jaką postawę strzelecką w warunkach bojowych należy stosować?", options: ["tylko klęczącą niską", "leżącą na brzuchu", "półfrontalną obniżoną", "dostosować postawę strzelecką do panującej sytuacji"], correct: "półfrontalną obniżoną" },
+        { q: "Zasada działania pistoletów P99/PPS/Glock/XDM oparta jest na:", options: ["odrzucie zamka półswobodnego", "wykorzystania krótkiego odrzutu lufy", "odrzucie zamka swobodnego", "żadna z podanych odpowiedzi"], correct: "żadna z podanych odpowiedzi" },
+        { q: "Jakie czynności należy wykonać po zakończeniu strzelania:", options: ["zdjąć palec z języka spustowego i trzymać broń w stronę bezpieczną", "zwolnić zamek, wykonać strzał kontrolny i schować broń do kabury", "odłączyć magazynek, zwolnić zamek i schować broń do kabury"], correct: "zwolnić zamek, wykonać strzał kontrolny i schować broń do kabury" }
     ];
-
-    let questions = [];
 
     function shuffle(array) {
         for (let i = array.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [array[i], array[j]] = [array[j], array[i]];
         }
+        return array;
     }
 
-    function renderQuiz() {
-        const container = document.getElementById("quiz");
-        container.innerHTML = "";
+    function startTest() {
+        document.getElementById('results-summary').style.display = 'none';
+        document.getElementById('quiz-area').style.display = 'block';
+        const container = document.getElementById('questions-container');
+        container.innerHTML = '';
 
-        questions.forEach((q, index) => {
-            const qDiv = document.createElement("div");
-            qDiv.className = "question";
+        // Losowanie pytań
+        const shuffledQuestions = shuffle([...questionsData]);
 
-            const qText = document.createElement("p");
-            qText.className = "question-text";
-            qText.textContent = (index + 1) + ". " + q.text;
+        shuffledQuestions.forEach((item, index) => {
+            const qDiv = document.createElement('div');
+            qDiv.className = 'question-block';
+            qDiv.dataset.correct = item.correct;
+
+            const qText = document.createElement('div');
+            qText.className = 'question-text';
+            qText.innerText = item.q;
             qDiv.appendChild(qText);
 
-            const optionsDiv = document.createElement("div");
-            optionsDiv.className = "options";
+            // Losowanie odpowiedzi
+            const shuffledOptions = shuffle([...item.options]);
 
-            ["A", "B", "C"].forEach(letter => {
-                const label = document.createElement("label");
-                const input = document.createElement("input");
-                const id = "q" + index + "_" + letter;
+            shuffledOptions.forEach(opt => {
+                const label = document.createElement('label');
+                label.className = 'option';
+                
+                const radio = document.createElement('input');
+                radio.type = 'radio';
+                radio.name = 'q' + index;
+                radio.value = opt;
 
-                input.type = "radio";
-                input.name = "q" + index;
-                input.value = letter;
-                input.id = id;
-
-                label.setAttribute("for", id);
-                label.appendChild(input);
-                label.appendChild(document.createTextNode(" " + letter + ". " + q.options[letter]));
-
-                optionsDiv.appendChild(label);
+                label.appendChild(radio);
+                label.append(opt);
+                qDiv.appendChild(label);
             });
 
-            qDiv.appendChild(optionsDiv);
             container.appendChild(qDiv);
         });
+        
+        window.scrollTo(0, 0);
     }
 
-    function initQuiz() {
-        questions = questionsData.map(q => ({...q}));
-        shuffle(questions);
-        renderQuiz();
-    }
-
-    function checkAnswers() {
-        const questionBlocks = document.querySelectorAll(".question");
+    function finishTest() {
+        const blocks = document.querySelectorAll('.question-block');
         let score = 0;
 
-        questionBlocks.forEach((block, index) => {
-            block.classList.remove("correct", "incorrect", "unanswered");
+        blocks.forEach(block => {
+            const correctValue = block.dataset.correct;
+            const options = block.querySelectorAll('.option');
+            const selectedRadio = block.querySelector('input[type="radio"]:checked');
+            const selectedValue = selectedRadio ? selectedRadio.value : null;
 
-            const q = questions[index];
-            const selected = block.querySelector("input[type=radio]:checked");
-            const labels = block.querySelectorAll("label");
-
-            labels.forEach(label => {
-                label.classList.remove("correct-answer", "bad");
-            });
-
-            if (!selected) {
-                block.classList.add("unanswered");
-                return;
-            }
-
-            const value = selected.value;
-
-            if (value === q.correct) {
+            if (selectedValue === correctValue) {
                 score++;
-                block.classList.add("correct");
-                selected.parentElement.classList.add("correct-answer");
-            } else {
-                block.classList.add("incorrect");
-                selected.parentElement.classList.add("bad");
-
-                labels.forEach(label => {
-                    const input = label.querySelector("input");
-                    if (input && input.value === q.correct) {
-                        label.classList.add("correct-answer");
-                    }
-                });
             }
+
+            options.forEach(optLabel => {
+                const radio = optLabel.querySelector('input');
+                const val = radio.value;
+
+                // Reset klas
+                optLabel.classList.remove('correct', 'wrong');
+
+                if (val === correctValue) {
+                    optLabel.classList.add('correct');
+                } else if (selectedValue === val && val !== correctValue) {
+                    optLabel.classList.add('wrong');
+                }
+            });
         });
 
-        document.getElementById("score").textContent =
-            "Twój wynik: " + score + " / " + questions.length;
+        const summary = document.getElementById('results-summary');
+        summary.style.display = 'block';
+        summary.innerHTML = `Twój wynik: ${score} / ${questionsData.length}`;
+        window.scrollTo(0, document.body.scrollHeight);
     }
-
-    function resetQuiz() {
-        document.getElementById("score").textContent = "";
-        initQuiz();
-    }
-
-    document.addEventListener("DOMContentLoaded", initQuiz);
 </script>
+
 </body>
 </html>
